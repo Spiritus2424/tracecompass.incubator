@@ -37,6 +37,7 @@ public class TraceServerConfiguration {
      */
     protected static final String PROPERTY_PORT = "traceserver.port"; //$NON-NLS-1$
 
+    private static final String ENV_PORT = "TRACESERVER_PORT"; //$NON-NLS-1$
     private static final String PROPERTY_USESSL = "traceserver.useSSL"; //$NON-NLS-1$
     private static final String PROPERTY_KEYSTORE = "traceserver.keystore"; //$NON-NLS-1$
     private static final String PROPERTY_KEYSTORE_PASS = "traceserver.keystorepass"; //$NON-NLS-1$
@@ -56,7 +57,7 @@ public class TraceServerConfiguration {
      * @return The trace server configuration
      */
     public static TraceServerConfiguration create() {
-        String portStr = System.getProperty(PROPERTY_PORT);
+        String portStr = System.getenv(ENV_PORT);
         String usesslStr = System.getProperty(PROPERTY_USESSL);
         usesslStr = usesslStr == null || usesslStr.isEmpty() ? null : usesslStr;
         String keystore = System.getProperty(PROPERTY_KEYSTORE);
