@@ -31,6 +31,7 @@ import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.ExperimentManagerService;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.FilterService;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.HealthService;
+import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.TraceController;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.TraceManagerService;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.TraceServerOpenApiResource;
 import org.eclipse.tracecompass.tmf.core.TmfCommonConstants;
@@ -141,6 +142,9 @@ public class WebApplication {
         rc.register(JacksonObjectMapperProvider.class);
         EncodingFilter.enableFor(rc, GZipEncoder.class);
         rc.register(TraceServerOpenApiResource.class);
+        
+        // Controller
+        rc.register(TraceController.class);
     }
 
     /**
