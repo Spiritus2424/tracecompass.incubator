@@ -19,6 +19,7 @@ import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.re
 import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.TRACE_CREATION_FAILED;
 import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.TRACE_UUID;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import javax.validation.Valid;
@@ -27,12 +28,12 @@ import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
-import javax.ws.rs.InternalServerErrorException;
-import javax.ws.rs.NotFoundException;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.ServerErrorException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
@@ -62,7 +63,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Produces(MediaType.APPLICATION_JSON)
 @Tag(name = EndpointConstants.TRA)
 public class TraceController {
-
 
     private final TraceService traceService;
 
@@ -101,8 +101,8 @@ public class TraceController {
         ResponseBuilder responseBuilder = null;
         try {
             responseBuilder = Response.ok(this.traceService.getTrace(uuid));
-        } catch (NotFoundException e) {
-            responseBuilder = Response.status(Status.NOT_FOUND);
+        } catch (ClientErrorException e) {
+            responseBuilder = Response.status(e.getResponse().getStatus(), e.getMessage());
         }
 
         return responseBuilder.build();
@@ -129,15 +129,23 @@ public class TraceController {
     })
     public Response openTrace(@RequestBody(content = {
             @Content(schema = @Schema(implementation = TraceQueryParameters.class))
-    }, required = true) @Valid Body<OpenTraceRequestDto> body) {
+    }, required = true) @NotNull @Valid final Body<OpenTraceRequestDto> body, @QueryParam("filter") String regexFilter) {
         ResponseBuilder responseBuilder = null;
-        try {
-            responseBuilder = Response.ok(this.traceService.openTrace(body.getParameters().name, body.getParameters().uri, body.getParameters().typeId));
-        } catch (TmfTraceImportException | CoreException | IllegalArgumentException | SecurityException e) {
-            responseBuilder = Response.status(Status.NOT_ACCEPTABLE.getStatusCode(), e.getMessage());
-        } catch (ClientErrorException | InternalServerErrorException e) {
-            responseBuilder = Response.status(e.getResponse().getStatus(), e.getMessage());
+
+        if (body.getParameters().isRecursively) {
+            Optional<String> optionalRegexFilter = regexFilter != null ? Optional.of(regexFilter) : Optional.empty();
+            responseBuilder = Response.ok(this.traceService.openTraces(body.getParameters().name, body.getParameters().uri, body.getParameters().typeId, optionalRegexFilter));
+        } else {
+            try {
+                responseBuilder = Response.ok(this.traceService.openTrace(body.getParameters().name, body.getParameters().uri, body.getParameters().typeId));
+            } catch (TmfTraceImportException | CoreException | IllegalArgumentException | SecurityException e) {
+                e.printStackTrace();
+                responseBuilder = Response.status(Status.NOT_ACCEPTABLE.getStatusCode(), e.getMessage());
+            } catch (ClientErrorException | ServerErrorException e) {
+                responseBuilder = Response.status(e.getResponse().getStatus(), e.getMessage());
+            }
         }
+
 
         return responseBuilder.build();
     }
@@ -160,7 +168,7 @@ public class TraceController {
         ResponseBuilder responseBuilder = null;
         try {
             responseBuilder = Response.ok(this.traceService.deleteTrace(uuid));
-        } catch (ClientErrorException | InternalServerErrorException e) {
+        } catch (ClientErrorException | ServerErrorException e) {
             responseBuilder = Response.status(e.getResponse().getStatus(), e.getMessage());
         }
 

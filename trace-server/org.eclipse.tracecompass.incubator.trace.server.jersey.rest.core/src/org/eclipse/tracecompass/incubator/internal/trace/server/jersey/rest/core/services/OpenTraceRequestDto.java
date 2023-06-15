@@ -1,6 +1,7 @@
 package org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services;
 
 import javax.validation.constraints.NotNull;
+import javax.ws.rs.DefaultValue;
 
 public class OpenTraceRequestDto {
 
@@ -10,4 +11,7 @@ public class OpenTraceRequestDto {
     public String name;
 
     public String typeId;
+
+    @DefaultValue("false")
+    public boolean isRecursively;
 }
