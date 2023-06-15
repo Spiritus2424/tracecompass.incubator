@@ -12,11 +12,15 @@ package org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.cor
 
 import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.NOT_SUPPORTED;
 import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.TRACE_CREATION_FAILED;
+import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.NO_SUCH_TRACE;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -24,8 +28,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.ClientErrorException;
@@ -90,15 +96,44 @@ public class TraceService {
     public Trace getTrace(@NotNull UUID uuid) throws NotFoundException {
         Trace trace = createTraceModel(uuid);
         if (trace == null) {
-            throw new NotFoundException();
+            throw new NotFoundException(NO_SUCH_TRACE);
         }
         return trace;
     }
 
 
+    public List<Trace> openTraces(String name, String uri, String typeID, Optional<String> regexFilter) {
+      List<String> paths;
+      try(Stream<java.nio.file.Path> stream = Files.walk(Paths.get(uri))) {
+          paths = stream.parallel()
+              .filter((Path path) -> Files.isDirectory(path))
+              .map(path -> path.toString())
+              .collect(Collectors.toList());
+
+          if (regexFilter.isPresent()) {
+              paths.removeIf(Pattern.compile(regexFilter.get()).asPredicate().negate());
+          }
+      } catch (IOException e) {
+          paths = new ArrayList<>();
+      }
+
+      List<Trace> traces = new ArrayList<>();
+      for(String path : paths) {
+          try {
+              traces.add(this.openTrace(name, path, typeID));
+          } catch (Exception e) {
+            // TODO: handle exception
+        }
+      }
+
+
+      return traces;
+    }
+
+
     public Trace openTrace(String name, String path, String typeID) throws TmfTraceImportException, CoreException, IllegalArgumentException, SecurityException, NotFoundException, InternalServerErrorException, ClientErrorException {
         if (!Paths.get(path).toFile().exists()) {
-            throw new NotFoundException("No trace at ".concat(path)); //$NON-NLS-1$
+            throw new NotFoundException(String.format("%s at %s", NO_SUCH_TRACE, path)); //$NON-NLS-1$
         }
 
         List<TraceTypeHelper> traceTypes = TmfTraceType.selectTraceType(path, typeID);
@@ -114,31 +149,32 @@ public class TraceService {
                 throw new InternalServerErrorException(TRACE_CREATION_FAILED);
             }
             resource.setPersistentProperty(TmfCommonConstants.TRACETYPE, traceType);
-        } else {
+        } else if(resource.exists()) {
             IPath targetLocation = getTargetLocation(path);
             IPath oldLocation = ResourceUtil.getLocation(resource);
             if (oldLocation == null || !targetLocation.equals(oldLocation.removeTrailingSeparator()) ||
                     !traceType.equals(resource.getPersistentProperty(TmfCommonConstants.TRACETYPE))) {
                 synchronized (this.resources) {
-                    Optional<@NonNull Entry<UUID, IResource>> oldEntry = this.resources.entrySet().stream().filter(entry -> resource.equals(entry.getValue())).findFirst();
-                    if (!oldEntry.isPresent()) {
-                        throw new InternalServerErrorException("Failed to find conflicting trace"); //$NON-NLS-1$
+                    Optional<@NonNull Entry<UUID, IResource>> oldEntry = this.resources.entrySet().stream()
+                            .filter(entry -> resource.equals(entry.getValue()))
+                            .findFirst();
+                    if(oldEntry.isPresent()) {
+                        UUID oldUUID = oldEntry.get().getKey();
+                        throw new ClientErrorException(Response.status(Status.CONFLICT).entity(createTraceModel(oldUUID)).build());
                     }
-                    UUID oldUUID = oldEntry.get().getKey();
-                    throw new ClientErrorException(Response.status(Status.CONFLICT).entity(createTraceModel(oldUUID)).build());
+                    throw new InternalServerErrorException("Failed to find conflicting trace"); //$NON-NLS-1$
                 }
             }
         }
         UUID uuid = getTraceUUID(resource);
         this.resources.put(uuid, resource);
         return createTraceModel(uuid);
-
     }
 
     public Trace deleteTrace(@NotNull UUID uuid) {
         Trace trace = createTraceModel(uuid);
         if (trace == null) {
-            throw new NotFoundException();
+            throw new NotFoundException(NO_SUCH_TRACE);
         }
         if (ExperimentManagerService.isTraceInUse(uuid)) {
             throw new ClientErrorException(Response.status(Status.CONFLICT).entity(trace).build());
