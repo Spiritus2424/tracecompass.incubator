@@ -112,12 +112,29 @@ public class ExperimentService {
      * @return the experiment or null if none match.
      */
     public synchronized @Nullable Experiment getExperiment(UUID expUuid) {
-        TmfExperiment experiment = this.experiments.get(expUuid);
-        if (experiment == null) {
-            experiment = createExperimentInstance(expUuid);
+        TmfExperiment tmfExperiment = this.experiments.get(expUuid);
+        if (tmfExperiment == null) {
+            tmfExperiment = createExperimentInstance(expUuid);
         }
 
-        return Experiment.from(experiment, expUuid);
+        return Experiment.from(tmfExperiment, expUuid);
+    }
+
+    /**
+     * Try and find an experiment with the queried UUID in the experiment
+     * manager.
+     *
+     * @param expUuid
+     *            queried {@link UUID}
+     * @return the experiment or null if none match.
+     */
+    public synchronized @Nullable TmfExperiment getTmfExperiment(UUID expUuid) {
+        TmfExperiment tmfExperiment = this.experiments.get(expUuid);
+        if (tmfExperiment == null) {
+            tmfExperiment = createExperimentInstance(expUuid);
+        }
+
+        return tmfExperiment;
     }
 
     /**
@@ -275,7 +292,7 @@ public class ExperimentService {
      *            queried {@link UUID}
      * @return the list of trace UUIDs.
      */
-    public List<UUID> getTraces(UUID expUUID) {
+    public List<UUID> getTraceUuids(UUID expUUID) {
         return this.traceUuids.getOrDefault(expUUID, Collections.emptyList());
     }
 
@@ -394,7 +411,7 @@ public class ExperimentService {
             experiment.getNext(ctx);
             ctx.dispose();
 
-            TmfSignalManager.dispatchSignal(new TmfTraceOpenedSignal(ExperimentManagerService.class, experiment, null));
+            TmfSignalManager.dispatchSignal(new TmfTraceOpenedSignal(ExperimentService.class, experiment, null));
 
             this.experiments.put(expUUID, experiment);
             this.traceAnnotationProviders.put(expUUID, new TraceAnnotationProvider(experiment));
