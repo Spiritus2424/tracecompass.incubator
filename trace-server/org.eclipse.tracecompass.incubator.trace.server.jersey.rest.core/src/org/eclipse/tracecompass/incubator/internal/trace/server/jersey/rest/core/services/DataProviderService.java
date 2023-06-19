@@ -187,6 +187,13 @@ public class DataProviderService {
     private static final @NonNull Logger LOGGER = TraceCompassLog.getLogger(DataProviderService.class);
 
     private final DataProviderManager manager = DataProviderManager.getInstance();
+    private final ExperimentService experimentService;
+
+    public DataProviderService() {
+        this.experimentService = ExperimentService.getInstance();
+
+    }
+
 
     /**
      * Getter for the list of data provider descriptions
@@ -203,14 +210,13 @@ public class DataProviderService {
             @ApiResponse(responseCode = "404", description = PROVIDER_NOT_FOUND, content = @Content(schema = @Schema(implementation = String.class)))
     })
     public Response getProviders(@Parameter(description = EXP_UUID) @PathParam("expUUID") UUID expUUID) {
-        TmfExperiment experiment = ExperimentManagerService.getExperimentByUUID(expUUID);
-        if (experiment == null) {
+        TmfExperiment tmfExperiment = this.experimentService.getTmfExperiment(expUUID);
+        if (tmfExperiment == null) {
             return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
         }
-        List<IDataProviderDescriptor> list = DataProviderManager.getInstance().getAvailableProviders(experiment);
-        list.addAll(getXmlDataProviderDescriptors(experiment, EnumSet.of(OutputType.TIME_GRAPH)));
-        list.addAll(getXmlDataProviderDescriptors(experiment, EnumSet.of(OutputType.XY)));
-        list.sort(Comparator.comparing(IDataProviderDescriptor::getName));
+        List<IDataProviderDescriptor> list = DataProviderManager.getInstance().getAvailableProviders(tmfExperiment);
+        list.addAll(getXmlDataProviderDescriptors(tmfExperiment, EnumSet.of(OutputType.TIME_GRAPH)));
+        list.addAll(getXmlDataProviderDescriptors(tmfExperiment, EnumSet.of(OutputType.XY)));
 
         /*
          * Bug 576402:
@@ -241,13 +247,13 @@ public class DataProviderService {
     public Response getProvider(
             @Parameter(description = EXP_UUID) @PathParam("expUUID") UUID expUUID,
             @Parameter(description = OUTPUT_ID) @PathParam("outputId") String outputId) {
-        TmfExperiment experiment = ExperimentManagerService.getExperimentByUUID(expUUID);
-        if (experiment == null) {
+        TmfExperiment tmfExperiment = this.experimentService.getTmfExperiment(expUUID);
+        if (tmfExperiment == null) {
             return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
         }
-        List<IDataProviderDescriptor> list = DataProviderManager.getInstance().getAvailableProviders(experiment);
-        list.addAll(getXmlDataProviderDescriptors(experiment, EnumSet.of(OutputType.TIME_GRAPH)));
-        list.addAll(getXmlDataProviderDescriptors(experiment, EnumSet.of(OutputType.XY)));
+        List<IDataProviderDescriptor> list = DataProviderManager.getInstance().getAvailableProviders(tmfExperiment);
+        list.addAll(getXmlDataProviderDescriptors(tmfExperiment, EnumSet.of(OutputType.TIME_GRAPH)));
+        list.addAll(getXmlDataProviderDescriptors(tmfExperiment, EnumSet.of(OutputType.XY)));
 
         Optional<IDataProviderDescriptor> provider = list.stream().filter(p -> p.getId().equals(outputId)).findFirst();
 
@@ -363,17 +369,17 @@ public class DataProviderService {
         }
         try (FlowScopeLog scope = new FlowScopeLogBuilder(LOGGER, Level.FINE, "DataProviderService#getXY") //$NON-NLS-1$
                 .setCategory(outputId).build()) {
-            TmfExperiment experiment = ExperimentManagerService.getExperimentByUUID(expUUID);
-            if (experiment == null) {
+            TmfExperiment tmfExperiment =  this.experimentService.getTmfExperiment(expUUID);
+            if (tmfExperiment == null) {
                 return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
             }
 
-            ITmfTreeXYDataProvider<@NonNull ITmfTreeDataModel> provider = manager.getOrCreateDataProvider(experiment,
+            ITmfTreeXYDataProvider<@NonNull ITmfTreeDataModel> provider = manager.getOrCreateDataProvider(tmfExperiment,
                     outputId, ITmfTreeXYDataProvider.class);
 
             if (provider == null) {
                 // try and find the XML provider for the ID.
-                provider = getXmlProvider(experiment, outputId, EnumSet.of(OutputType.XY));
+                provider = getXmlProvider(tmfExperiment, outputId, EnumSet.of(OutputType.XY));
             }
 
             if (provider == null) {
@@ -491,12 +497,12 @@ public class DataProviderService {
         }
         try (FlowScopeLog scope = new FlowScopeLogBuilder(LOGGER, Level.FINE, "DataProviderService#getStates") //$NON-NLS-1$
                 .setCategory(outputId).build()) {
-            TmfExperiment experiment = ExperimentManagerService.getExperimentByUUID(expUUID);
-            if (experiment == null) {
+            TmfExperiment tmfExperiment = this.experimentService.getTmfExperiment(expUUID);
+            if (tmfExperiment == null) {
                 return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
             }
 
-            ITimeGraphDataProvider<@NonNull ITimeGraphEntryModel> provider = getTimeGraphProvider(experiment, outputId);
+            ITimeGraphDataProvider<@NonNull ITimeGraphEntryModel> provider = getTimeGraphProvider(tmfExperiment, outputId);
 
             if (provider == null) {
                 // The analysis cannot be run on this trace
@@ -557,12 +563,12 @@ public class DataProviderService {
         }
         try (FlowScopeLog scope = new FlowScopeLogBuilder(LOGGER, Level.FINE, "DataProviderService#getArrows") //$NON-NLS-1$
                 .setCategory(outputId).build()) {
-            TmfExperiment experiment = ExperimentManagerService.getExperimentByUUID(expUUID);
-            if (experiment == null) {
+            TmfExperiment tmfExperiment = this.experimentService.getTmfExperiment(expUUID);
+            if (tmfExperiment == null) {
                 return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
             }
 
-            ITimeGraphDataProvider<@NonNull ITimeGraphEntryModel> provider = getTimeGraphProvider(experiment, outputId);
+            ITimeGraphDataProvider<@NonNull ITimeGraphEntryModel> provider = getTimeGraphProvider(tmfExperiment, outputId);
 
             if (provider == null) {
                 // The analysis cannot be run on this trace
@@ -598,8 +604,8 @@ public class DataProviderService {
     public Response getMarkerSets(@Parameter(description = EXP_UUID) @PathParam("expUUID") UUID expUUID) {
 
         try (FlowScopeLog scope = new FlowScopeLogBuilder(LOGGER, Level.FINE, "DataProviderService#getMarkerSets").build()) { //$NON-NLS-1$
-            TmfExperiment experiment = ExperimentManagerService.getExperimentByUUID(expUUID);
-            if (experiment == null) {
+            TmfExperiment tmfExperiment = this.experimentService.getTmfExperiment(expUUID);
+            if (tmfExperiment == null) {
                 return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
             }
             List<MarkerSet> markerSets = MarkerConfigXmlParser.getMarkerSets();
@@ -637,12 +643,12 @@ public class DataProviderService {
         }
         try (FlowScopeLog scope = new FlowScopeLogBuilder(LOGGER, Level.FINE, "DataProviderService#getAnnotationCategories") //$NON-NLS-1$
                 .setCategory(outputId).build()) {
-            TmfExperiment experiment = ExperimentManagerService.getExperimentByUUID(expUUID);
-            if (experiment == null) {
+            TmfExperiment tmfExperiment = this.experimentService.getTmfExperiment(expUUID);
+            if (tmfExperiment == null) {
                 return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
             }
 
-            ITmfTreeDataProvider<? extends @NonNull ITmfTreeDataModel> provider = manager.getOrCreateDataProvider(experiment,
+            ITmfTreeDataProvider<? extends @NonNull ITmfTreeDataModel> provider = manager.getOrCreateDataProvider(tmfExperiment,
                     outputId, ITmfTreeDataProvider.class);
 
             if (provider == null) {
@@ -653,7 +659,7 @@ public class DataProviderService {
             boolean isComplete = true;
             AnnotationCategoriesModel model = null;
             // Fetch trace annotation categories
-            TraceAnnotationProvider traceAnnotationProvider = ExperimentManagerService.getTraceAnnotationProvider(expUUID);
+            TraceAnnotationProvider traceAnnotationProvider = this.experimentService.getTraceAnnotationProvider(expUUID);
             if (traceAnnotationProvider != null) {
                 // Parameter is only applicable for trace annotation provider
                 @NonNull Map<@NonNull String, @NonNull Object> params =
@@ -721,12 +727,12 @@ public class DataProviderService {
         }
         try (FlowScopeLog scope = new FlowScopeLogBuilder(LOGGER, Level.FINE, "DataProviderService#getAnnotations") //$NON-NLS-1$
                 .setCategory(outputId).build()) {
-            TmfExperiment experiment = ExperimentManagerService.getExperimentByUUID(expUUID);
-            if (experiment == null) {
+            TmfExperiment tmfExperiment = this.experimentService.getTmfExperiment(expUUID);
+            if (tmfExperiment == null) {
                 return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
             }
 
-            ITmfTreeDataProvider<? extends @NonNull ITmfTreeDataModel> provider = manager.getOrCreateDataProvider(experiment,
+            ITmfTreeDataProvider<? extends @NonNull ITmfTreeDataModel> provider = manager.getOrCreateDataProvider(tmfExperiment,
                     outputId, ITmfTreeDataProvider.class);
 
             if (provider == null) {
@@ -744,7 +750,7 @@ public class DataProviderService {
             AnnotationModel model = null;
 
             // Fetch trace annotations
-            TraceAnnotationProvider traceAnnotationProvider = ExperimentManagerService.getTraceAnnotationProvider(expUUID);
+            TraceAnnotationProvider traceAnnotationProvider = this.experimentService.getTraceAnnotationProvider(expUUID);
             if (traceAnnotationProvider != null) {
                 TmfModelResponse<@NonNull AnnotationModel> traceAnnotations = traceAnnotationProvider.fetchAnnotations(params, null);
                 if (traceAnnotations.getStatus() == ITmfResponse.Status.CANCELLED || traceAnnotations.getStatus() == ITmfResponse.Status.FAILED) {
@@ -814,12 +820,12 @@ public class DataProviderService {
         }
         try (FlowScopeLog scope = new FlowScopeLogBuilder(LOGGER, Level.FINE, "DataProviderService#getTimeGraphTooltip") //$NON-NLS-1$
                 .setCategory(outputId).build()) {
-            TmfExperiment experiment = ExperimentManagerService.getExperimentByUUID(expUUID);
-            if (experiment == null) {
+            TmfExperiment tmfExperiment = this.experimentService.getTmfExperiment(expUUID);
+            if (tmfExperiment == null) {
                 return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
             }
 
-            ITimeGraphDataProvider<@NonNull ITimeGraphEntryModel> provider = getTimeGraphProvider(experiment, outputId);
+            ITimeGraphDataProvider<@NonNull ITimeGraphEntryModel> provider = getTimeGraphProvider(tmfExperiment, outputId);
 
             if (provider == null) {
                 // The analysis cannot be run on this trace
@@ -936,12 +942,12 @@ public class DataProviderService {
         }
         try (FlowScopeLog scope = new FlowScopeLogBuilder(LOGGER, Level.FINE, "DataProviderService#getLines") //$NON-NLS-1$
                 .setCategory(outputId).build()) {
-            TmfExperiment experiment = ExperimentManagerService.getExperimentByUUID(expUUID);
-            if (experiment == null) {
+            TmfExperiment tmfExperiment = this.experimentService.getTmfExperiment(expUUID);
+            if (tmfExperiment == null) {
                 return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
             }
 
-            ITmfVirtualTableDataProvider<? extends IVirtualTableLine, ? extends ITmfTreeDataModel> provider = manager.getOrCreateDataProvider(experiment, outputId, ITmfVirtualTableDataProvider.class);
+            ITmfVirtualTableDataProvider<? extends IVirtualTableLine, ? extends ITmfTreeDataModel> provider = manager.getOrCreateDataProvider(tmfExperiment, outputId, ITmfVirtualTableDataProvider.class);
             if (provider == null) {
                 return Response.status(Status.METHOD_NOT_ALLOWED).entity(NO_PROVIDER).build();
             }
@@ -1038,7 +1044,7 @@ public class DataProviderService {
         }
         try (FlowScopeLog scope = new FlowScopeLogBuilder(LOGGER, Level.FINE, "DataProviderService#getTree") //$NON-NLS-1$
                 .setCategory(outputId).build()) {
-            TmfExperiment experiment = ExperimentManagerService.getExperimentByUUID(expUUID);
+            TmfExperiment experiment = this.experimentService.getTmfExperiment(expUUID);
             if (experiment == null) {
                 return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
             }
@@ -1105,12 +1111,12 @@ public class DataProviderService {
         Map<String, Object> params = queryParameters.getParameters();
         try (FlowScopeLog scope = new FlowScopeLogBuilder(LOGGER, Level.FINE, "DataProviderService#getStyles") //$NON-NLS-1$
                 .setCategory(outputId).build()) {
-            TmfExperiment experiment = ExperimentManagerService.getExperimentByUUID(expUUID);
-            if (experiment == null) {
+            TmfExperiment tmfExperiment = this.experimentService.getTmfExperiment(expUUID);
+            if (tmfExperiment == null) {
                 return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
             }
 
-            ITmfTreeDataProvider<? extends @NonNull ITmfTreeDataModel> provider = manager.getOrCreateDataProvider(experiment,
+            ITmfTreeDataProvider<? extends @NonNull ITmfTreeDataModel> provider = manager.getOrCreateDataProvider(tmfExperiment,
                     outputId, ITmfTreeDataProvider.class);
 
             if (provider == null) {

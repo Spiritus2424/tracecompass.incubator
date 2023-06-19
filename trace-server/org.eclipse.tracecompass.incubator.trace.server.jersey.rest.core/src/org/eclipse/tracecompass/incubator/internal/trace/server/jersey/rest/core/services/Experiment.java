@@ -88,7 +88,7 @@ public final class Experiment implements Serializable {
      * @return the experiment model
      */
     public static Experiment from(TmfExperiment experiment, UUID expUUID) {
-        Iterator<UUID> iter = ExperimentManagerService.getTraceUUIDs(expUUID).iterator();
+        Iterator<UUID> iter = ExperimentService.getInstance().getTraceUuids(expUUID).iterator();
         // Get all the leaf traces from experiment
         @NonNull List<@NonNull ITmfTrace> children = new ArrayList<>(TmfTraceManager.getTraceSet(experiment));
         Set<Trace> traces = Sets.newLinkedHashSet(Lists.transform(children,
@@ -112,7 +112,7 @@ public final class Experiment implements Serializable {
      * @return the experiment model
      */
     public static Experiment from(IResource experimentResource, UUID expUUID) {
-        List<UUID> traceUUIDs = ExperimentManagerService.getTraceUUIDs(expUUID);
+        List<UUID> traceUUIDs = ExperimentService.getInstance().getTraceUuids(expUUID);
         Set<Trace> traces = new LinkedHashSet<>(Lists.transform(traceUUIDs, uuid -> Trace.from(TraceService.getInstance().getTraceResource(uuid), uuid)));
         return new Experiment(experimentResource.getName(),
                 expUUID,

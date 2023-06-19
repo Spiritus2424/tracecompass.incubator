@@ -189,7 +189,7 @@ public class TraceService {
         if (trace == null) {
             throw new NotFoundException(NO_SUCH_TRACE);
         }
-        if (ExperimentManagerService.isTraceInUse(uuid)) {
+        if (ExperimentService.getInstance().isTraceInUse(uuid)) {
             throw new ClientErrorException(Response.status(Status.CONFLICT).entity(trace).build());
         }
         IResource resource = this.resources.remove(uuid);
