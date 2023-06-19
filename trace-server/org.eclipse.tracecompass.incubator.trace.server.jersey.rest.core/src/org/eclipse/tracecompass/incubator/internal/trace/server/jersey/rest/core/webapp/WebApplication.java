@@ -29,7 +29,7 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.ConfigurationManagerService;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.DataProviderService;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.ExperimentController;
-import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.ExperimentManagerService;
+import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.ExperimentService;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.FilterService;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.HealthService;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.TraceController;
@@ -192,8 +192,7 @@ public class WebApplication {
      */
     public void dispose() {
         TraceService.getInstance().dispose();
-//        ExperimentManagerService.dispose();
-//        TraceManagerService.dispose();
+        ExperimentService.getInstance().dispose();
     }
 
     /**
