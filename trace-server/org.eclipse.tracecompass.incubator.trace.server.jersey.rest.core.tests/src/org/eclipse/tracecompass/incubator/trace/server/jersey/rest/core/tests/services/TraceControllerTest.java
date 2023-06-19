@@ -30,7 +30,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.TraceManagerService;
+import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.TraceController;
 import org.eclipse.tracecompass.incubator.trace.server.jersey.rest.core.tests.stubs.TraceModelStub;
 import org.eclipse.tracecompass.incubator.trace.server.jersey.rest.core.tests.utils.RestServerTest;
 import org.eclipse.tracecompass.testtraces.ctf.CtfTestTrace;
@@ -46,10 +46,10 @@ import com.google.common.collect.ImmutableSet;
  *
  * @author Loic Prieur-Drevon
  */
-public class TraceManagerServiceTest extends RestServerTest {
+public class TraceControllerTest extends RestServerTest {
 
     /**
-     * Test basic operations on the {@link TraceManagerService}.
+     * Test basic operations on the {@link TraceController}.
      */
     @Test
     public void testWithOneTrace() {

@@ -158,7 +158,7 @@ public class ExperimentManagerService {
                 IPath path = resource.getProjectRelativePath().makeRelativeTo(experimentResource.getProjectRelativePath());
                 IResource traceResource = experimentResource.getProject().getFolder(TRACES_FOLDER).findMember(path);
                 if (traceResource != null) {
-                    traceUUIDs.add(TraceManagerService.getTraceUUID(traceResource));
+                    traceUUIDs.add(TraceService.getInstance().getTraceUUID(traceResource));
                 }
                 return false;
             }
@@ -289,7 +289,7 @@ public class ExperimentManagerService {
                 return Response.status(Status.BAD_REQUEST).build();
             }
             UUID uuid = UUID.fromString((String) uuidObj);
-            IResource traceResource = TraceManagerService.getTraceResource(uuid);
+            IResource traceResource = TraceService.getInstance().getTraceResource(uuid);
             if (traceResource == null) {
                 // The trace should have been created first
                 return Response.noContent().build();
@@ -348,7 +348,7 @@ public class ExperimentManagerService {
         createSupplementaryFolder(resource);
 
         // Instantiate the experiment and return it
-        ITmfTrace[] traces = Lists.transform(traceUUIDs, uuid -> TraceManagerService.createTraceInstance(uuid)).toArray(new ITmfTrace[0]);
+        ITmfTrace[] traces = Lists.transform(traceUUIDs, uuid -> TraceService.getInstance().createTraceInstance(uuid)).toArray(new ITmfTrace[0]);
         // Determine cache size for experiments
         int cacheSize = Integer.MAX_VALUE;
         for (ITmfTrace trace : traces) {

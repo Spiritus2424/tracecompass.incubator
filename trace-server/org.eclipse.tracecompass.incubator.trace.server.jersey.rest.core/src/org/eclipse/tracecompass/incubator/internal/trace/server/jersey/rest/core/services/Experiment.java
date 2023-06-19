@@ -113,7 +113,7 @@ public final class Experiment implements Serializable {
      */
     public static Experiment from(IResource experimentResource, UUID expUUID) {
         List<UUID> traceUUIDs = ExperimentManagerService.getTraceUUIDs(expUUID);
-        Set<Trace> traces = new LinkedHashSet<>(Lists.transform(traceUUIDs, uuid -> Trace.from(TraceManagerService.getTraceResource(uuid), uuid)));
+        Set<Trace> traces = new LinkedHashSet<>(Lists.transform(traceUUIDs, uuid -> Trace.from(TraceService.getInstance().getTraceResource(uuid), uuid)));
         return new Experiment(experimentResource.getName(),
                 expUUID,
                 0L,
