@@ -20,7 +20,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.HealthService;
-import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.TraceManagerService;
 import org.eclipse.tracecompass.incubator.trace.server.jersey.rest.core.tests.utils.RestServerTest;
 import org.junit.Test;
 
@@ -32,7 +31,7 @@ import org.junit.Test;
 public class HealthServiceTest extends RestServerTest {
 
     /**
-     * Test basic operations on the {@link TraceManagerService}.
+     * Test basic operations on the {@link HealthService}.
      */
     @Test
     public void testHealthStatus() {

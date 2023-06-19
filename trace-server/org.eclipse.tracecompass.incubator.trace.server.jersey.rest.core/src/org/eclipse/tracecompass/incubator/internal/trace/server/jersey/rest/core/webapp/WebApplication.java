@@ -32,8 +32,9 @@ import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.FilterService;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.HealthService;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.TraceController;
-import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.TraceManagerService;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.TraceServerOpenApiResource;
+import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.TraceService;
+import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.XmlManagerService;
 import org.eclipse.tracecompass.tmf.core.TmfCommonConstants;
 import org.eclipse.tracecompass.tmf.core.TmfProjectNature;
 import org.glassfish.jersey.message.GZipEncoder;
@@ -133,7 +134,6 @@ public class WebApplication {
      */
     protected void registerResourcesAndMappers(ResourceConfig rc) {
         rc.register(ConfigurationManagerService.class);
-        rc.register(TraceManagerService.class);
         rc.register(ExperimentManagerService.class);
         rc.register(DataProviderService.class);
         rc.register(FilterService.class);
@@ -190,8 +190,9 @@ public class WebApplication {
      * Needs to be called before calling {@link #stop()}
      */
     public void dispose() {
-        ExperimentManagerService.dispose();
-        TraceManagerService.dispose();
+        TraceService.getInstance().dispose();
+//        ExperimentManagerService.dispose();
+//        TraceManagerService.dispose();
     }
 
     /**

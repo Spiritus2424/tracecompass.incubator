@@ -53,10 +53,14 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.Activator;
 import org.eclipse.tracecompass.tmf.core.TmfCommonConstants;
+import org.eclipse.tracecompass.tmf.core.event.ITmfEvent;
+import org.eclipse.tracecompass.tmf.core.exceptions.TmfTraceException;
 import org.eclipse.tracecompass.tmf.core.io.ResourceUtil;
 import org.eclipse.tracecompass.tmf.core.project.model.TmfTraceImportException;
 import org.eclipse.tracecompass.tmf.core.project.model.TmfTraceType;
 import org.eclipse.tracecompass.tmf.core.project.model.TraceTypeHelper;
+import org.eclipse.tracecompass.tmf.core.trace.ITmfContext;
+import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
 
 /**
  * Service to manage traces.
@@ -224,6 +228,52 @@ public class TraceService {
     public @Nullable IResource getTraceResource(UUID uuid) {
         return this.resources.get(uuid);
     }
+
+    /**
+     * Create an instance of a trace by its UUID. The caller is responsible to
+     * dispose the instance when it is no longer needed.
+     *
+     * @param uuid
+     *            the trace UUID
+     * @return the trace instance, or null if it could not be created
+     */
+    public @Nullable ITmfTrace createTraceInstance(UUID uuid) {
+        try {
+            IResource resource = this.resources.get(uuid);
+            if (resource == null) {
+                return null;
+            }
+            String typeID = TmfTraceType.getTraceTypeId(resource);
+            if (typeID == null) {
+                return null;
+            }
+            ITmfTrace trace = TmfTraceType.instantiateTrace(typeID);
+            if (trace != null) {
+                String path = Objects.requireNonNull(ResourceUtil.getLocation(resource)).removeTrailingSeparator().toOSString();
+                String name = resource.getName();
+                trace.initTrace(resource, path, ITmfEvent.class, name, typeID);
+                trace.indexTrace(false);
+                // read first event to make sure start time is initialized
+                ITmfContext ctx = trace.seekEvent(0);
+                trace.getNext(ctx);
+                ctx.dispose();
+            }
+            return trace;
+        } catch (CoreException | TmfTraceException e) {
+            Activator.getInstance().logError("Failed to create trace instance for " + uuid, e); //$NON-NLS-1$
+            return null;
+        }
+    }
+
+
+
+    /**
+     * Dispose method to be only called at server shutdown.
+     */
+    public void dispose() {
+        this.resources.clear();
+    }
+
 
     private Trace createTraceModel(UUID uuid) {
         IResource resource = this.resources.get(uuid);
