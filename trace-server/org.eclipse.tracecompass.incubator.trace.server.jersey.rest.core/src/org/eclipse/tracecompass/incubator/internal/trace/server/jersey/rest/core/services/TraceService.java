@@ -50,6 +50,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.Activator;
 import org.eclipse.tracecompass.tmf.core.TmfCommonConstants;
 import org.eclipse.tracecompass.tmf.core.io.ResourceUtil;
@@ -207,36 +208,45 @@ public class TraceService {
      *            the trace resource
      * @return the trace UUID
      */
-    public static UUID getTraceUUID(IResource resource) {
+    public UUID getTraceUUID(IResource resource) {
         IPath location = ResourceUtil.getLocation(resource);
         IPath path = location != null ? location.append(resource.getName()) : resource.getProjectRelativePath();
         UUID uuid = UUID.nameUUIDFromBytes(Objects.requireNonNull(path.toString().getBytes(Charset.defaultCharset())));
         return uuid;
     }
 
+    /**
+     * Get the resource of a trace by its UUID.
+     * @param uuid
+     *            the trace UUID
+     * @return the trace resource, or null if it could not be found
+     */
+    public @Nullable IResource getTraceResource(UUID uuid) {
+        return this.resources.get(uuid);
+    }
 
     private Trace createTraceModel(UUID uuid) {
         IResource resource = this.resources.get(uuid);
         return (resource != null) ? Trace.from(resource, uuid) : null;
     }
 
-    private static Map<UUID, IResource> initTraces() {
+    private Map<UUID, IResource> initTraces() {
         IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
         IProject project = root.getProject(TmfCommonConstants.DEFAULT_TRACE_PROJECT_NAME);
-        Map<UUID, IResource> resources = new HashMap<>();
+        Map<UUID, IResource> initialResources = new HashMap<>();
         try {
             project.refreshLocal(IResource.DEPTH_INFINITE, null);
             IFolder tracesFolder = project.getFolder(TRACES_FOLDER);
             tracesFolder.accept(resource -> {
                 boolean isSymbolcLink = ResourceUtil.isSymbolicLink(resource);
                 if (isSymbolcLink) {
-                    resources.put(getTraceUUID(resource), resource);
+                    initialResources.put(getTraceUUID(resource), resource);
                 }
                 return isSymbolcLink;
             });
         } catch (CoreException e) {
         }
-        return resources;
+        return initialResources;
     }
 
     /**
@@ -252,7 +262,7 @@ public class TraceService {
      * @throws CoreException
      *             if an error occurs
      */
-    private static synchronized boolean createResource(String path, IResource resource) throws CoreException {
+    private synchronized boolean createResource(String path, IResource resource) throws CoreException {
         // create the resource hierarchy.
         IPath targetLocation = new org.eclipse.core.runtime.Path(path);
         createFolder((IFolder) resource.getParent(), null);
@@ -269,7 +279,7 @@ public class TraceService {
         return true;
     }
 
-    private static void createFolder(IFolder folder, IProgressMonitor monitor) throws CoreException {
+    private void createFolder(IFolder folder, IProgressMonitor monitor) throws CoreException {
         // Taken from: org.eclipse.tracecompass.tmf.ui.project.model.TraceUtil.java
         // TODO: have a tmf.core util for that.
         if (!folder.exists()) {
@@ -340,6 +350,5 @@ public class TraceService {
         }
         return p.removeTrailingSeparator();
     }
-
 
 }
