@@ -58,7 +58,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
  *
  * @author Ahmad Faour
  */
-@Path("/ahmad/traces")
+@Path("traces")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @Tag(name = EndpointConstants.TRA)
