@@ -1,5 +1,7 @@
 package org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.DefaultValue;
 
@@ -12,6 +14,7 @@ public class OpenTraceRequestDto {
 
     public String typeId;
 
-    @DefaultValue("false")
-    public boolean isRecursively;
+    @Min(0)
+    @Max(3)
+    public int maxDepth;
 }

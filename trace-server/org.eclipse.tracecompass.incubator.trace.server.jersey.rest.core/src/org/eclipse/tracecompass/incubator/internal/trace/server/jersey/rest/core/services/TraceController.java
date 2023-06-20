@@ -132,9 +132,9 @@ public class TraceController {
     }, required = true) @NotNull @Valid final Body<OpenTraceRequestDto> body, @QueryParam("filter") String regexFilter) {
         ResponseBuilder responseBuilder = null;
 
-        if (body.getParameters().isRecursively) {
-            Optional<String> optionalRegexFilter = regexFilter != null ? Optional.of(regexFilter) : Optional.empty();
-            responseBuilder = Response.ok(this.traceService.openTraces(body.getParameters().name, body.getParameters().uri, body.getParameters().typeId, optionalRegexFilter));
+        if (body.getParameters().maxDepth > 0) {
+            Optional<String> optionalRegexFilter = regexFilter != null && !regexFilter.trim().isEmpty() ? Optional.of(regexFilter.trim()) : Optional.empty();
+            responseBuilder = Response.ok(this.traceService.openTraces(body.getParameters().name, body.getParameters().uri, body.getParameters().typeId, body.getParameters().maxDepth, optionalRegexFilter));
         } else {
             try {
                 responseBuilder = Response.ok(this.traceService.openTrace(body.getParameters().name, body.getParameters().uri, body.getParameters().typeId));
