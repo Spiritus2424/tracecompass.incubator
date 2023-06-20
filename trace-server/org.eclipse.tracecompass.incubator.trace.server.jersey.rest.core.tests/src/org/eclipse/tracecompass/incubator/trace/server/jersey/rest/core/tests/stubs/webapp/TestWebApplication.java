@@ -12,7 +12,7 @@
 package org.eclipse.tracecompass.incubator.trace.server.jersey.rest.core.tests.stubs.webapp;
 
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.ConfigurationManagerService;
-import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.ExperimentManagerService;
+import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.ExperimentController;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.FilterService;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.HealthService;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.TraceController;
@@ -42,7 +42,7 @@ public class TestWebApplication extends WebApplication {
     @Override
     protected void registerResourcesAndMappers(ResourceConfig rc) {
         rc.register(TraceController.class);
-        rc.register(ExperimentManagerService.class);
+        rc.register(ExperimentController.class);
         rc.register(TestDataProviderService.class);
         rc.register(FilterService.class);
         rc.register(HealthService.class);
