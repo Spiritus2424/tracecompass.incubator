@@ -107,9 +107,18 @@ public class TraceService {
     }
 
 
-    public List<Trace> openTraces(String name, String uri, String typeID, Optional<String> regexFilter) {
+    /**
+     * @param name of the trace
+     * @param uri path of the trace
+     * @param typeID of the trace
+     * @param maxDepth max depth
+     * @param regexFilter filter the paths
+     * @return List of Trace
+     */
+    public List<Trace> openTraces(String name, String uri, String typeID, int maxDepth ,Optional<String> regexFilter) {
       List<String> paths;
-      try(Stream<java.nio.file.Path> stream = Files.walk(Paths.get(uri))) {
+
+      try(Stream<java.nio.file.Path> stream = Files.walk(Paths.get(uri), maxDepth)) {
           paths = stream.parallel()
               .filter((Path path) -> Files.isDirectory(path))
               .map(path -> path.toString())
@@ -126,9 +135,7 @@ public class TraceService {
       for(String path : paths) {
           try {
               traces.add(this.openTrace(name, path, typeID));
-          } catch (Exception e) {
-            // TODO: handle exception
-        }
+          } catch (Exception e) { }
       }
 
 
