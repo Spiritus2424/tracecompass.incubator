@@ -115,7 +115,7 @@ public class TraceService {
      * @param regexFilter filter the paths
      * @return List of Trace
      */
-    public List<Trace> openTraces(String name, String uri, String typeID, int maxDepth ,Optional<String> regexFilter) {
+    public List<Trace> openTraces(String uri, String name, String typeID, int maxDepth ,Optional<String> regexFilter) {
       List<String> paths;
 
       try(Stream<java.nio.file.Path> stream = Files.walk(Paths.get(uri), maxDepth)) {
@@ -123,18 +123,19 @@ public class TraceService {
               .filter((Path path) -> Files.isDirectory(path))
               .map(path -> path.toString())
               .collect(Collectors.toList());
-
-          if (regexFilter.isPresent()) {
-              paths.removeIf(Pattern.compile(regexFilter.get()).asPredicate().negate());
-          }
       } catch (IOException e) {
           paths = new ArrayList<>();
       }
 
+      if (regexFilter.isPresent()) {
+          paths.removeIf(Pattern.compile(regexFilter.get()).asPredicate().negate());
+      }
+
       List<Trace> traces = new ArrayList<>();
       for(String path : paths) {
+          String traceName = name != null ? String.format("%s%s", name,Paths.get(path).getFileName().toString()) : null; //$NON-NLS-1$
           try {
-              traces.add(this.openTrace(name, path, typeID));
+              traces.add(this.openTrace(path, traceName, typeID));
           } catch (Exception e) { }
       }
 
@@ -143,7 +144,7 @@ public class TraceService {
     }
 
 
-    public Trace openTrace(String name, String path, String typeID) throws TmfTraceImportException, CoreException, IllegalArgumentException, SecurityException, NotFoundException, InternalServerErrorException, ClientErrorException {
+    public Trace openTrace(String path, String name, String typeID) throws TmfTraceImportException, CoreException, IllegalArgumentException, SecurityException, NotFoundException, InternalServerErrorException, ClientErrorException {
         if (!Paths.get(path).toFile().exists()) {
             throw new NotFoundException(String.format("%s at %s", NO_SUCH_TRACE, path)); //$NON-NLS-1$
         }
