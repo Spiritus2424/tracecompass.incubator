@@ -134,10 +134,10 @@ public class TraceController {
 
         if (body.getParameters().maxDepth > 0) {
             Optional<String> optionalRegexFilter = regexFilter != null && !regexFilter.trim().isEmpty() ? Optional.of(regexFilter.trim()) : Optional.empty();
-            responseBuilder = Response.ok(this.traceService.openTraces(body.getParameters().name, body.getParameters().uri, body.getParameters().typeId, body.getParameters().maxDepth, optionalRegexFilter));
+            responseBuilder = Response.ok(this.traceService.openTraces(body.getParameters().uri, body.getParameters().name, body.getParameters().typeId, body.getParameters().maxDepth, optionalRegexFilter));
         } else {
             try {
-                responseBuilder = Response.ok(this.traceService.openTrace(body.getParameters().name, body.getParameters().uri, body.getParameters().typeId));
+                responseBuilder = Response.ok(this.traceService.openTrace(body.getParameters().uri, body.getParameters().name, body.getParameters().typeId));
             } catch (TmfTraceImportException | CoreException | IllegalArgumentException | SecurityException e) {
                 e.printStackTrace();
                 responseBuilder = Response.status(Status.NOT_ACCEPTABLE.getStatusCode(), e.getMessage());
