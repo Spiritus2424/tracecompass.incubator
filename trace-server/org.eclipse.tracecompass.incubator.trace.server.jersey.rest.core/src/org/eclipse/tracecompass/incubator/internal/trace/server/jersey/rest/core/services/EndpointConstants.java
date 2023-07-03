@@ -78,6 +78,7 @@ public final class EndpointConstants {
      * Swagger @Tag-s next below in alphabetical order for maintainability.
      * 3-letters so they align in {@link DataProviderService}; readability.
      */
+    static final String ACT = "Action"; //$NON-NLS-1$
     static final String ANN = "Annotations"; //$NON-NLS-1$
     static final String CFG = "Configurations"; //$NON-NLS-1$
     static final String DIA = "Diagnostic"; //$NON-NLS-1$
