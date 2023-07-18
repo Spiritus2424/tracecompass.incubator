@@ -39,6 +39,7 @@ import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.TraceServerOpenApiResource;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.TraceService;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.XmlController;
+import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.TimeGraphController;
 import org.eclipse.tracecompass.tmf.core.TmfCommonConstants;
 import org.eclipse.tracecompass.tmf.core.TmfProjectNature;
 import org.glassfish.jersey.message.GZipEncoder;
