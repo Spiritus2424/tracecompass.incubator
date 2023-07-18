@@ -7,8 +7,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class GetTreeRequestDto {
 
     @JsonProperty("requested_times")
-    List<Long> requestedTimes;
+    public List<Long> requestedTimes;
 
     @JsonProperty("requested_timerange")
-    TimeRange requestedTimerange;
+    public TimeRange requestedTimerange;
 }
