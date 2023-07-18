@@ -71,10 +71,10 @@ public class ExperimentService {
     private final Map<UUID, TraceAnnotationProvider> traceAnnotationProviders;
 
     private ExperimentService() {
-        this.resources = Collections.synchronizedMap(this.initExperimentResources());
         this.traceUuids = Collections.synchronizedMap(new HashMap<>());
         this.experiments = Collections.synchronizedMap(new HashMap<>());
         this.traceAnnotationProviders = Collections.synchronizedMap(new HashMap<>());
+        this.resources = Collections.synchronizedMap(this.initExperimentResources());
     }
 
     /**

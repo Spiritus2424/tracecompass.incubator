@@ -113,8 +113,6 @@ public class ExperimentController {
      *         any trace.
      */
     @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Create a new experiment on the server", responses = {
             @ApiResponse(responseCode = "200", description = "The experiment was successfully created", content = @Content(schema = @Schema(implementation = org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.Experiment.class))),
             @ApiResponse(responseCode = "204", description = "The experiment has at least one trace which hasn't been created yet", content = @Content(schema = @Schema(implementation = String.class))),
@@ -155,7 +153,6 @@ public class ExperimentController {
      */
     @DELETE
     @Path("/{expUUID}")
-    @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Remove an experiment from the server", responses = {
             @ApiResponse(responseCode = "200", description = "The trace was successfully deleted, return the deleted experiment.", content = @Content(schema = @Schema(implementation = org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.Experiment.class))),
             @ApiResponse(responseCode = "404", description = NO_SUCH_EXPERIMENT, content = @Content(schema = @Schema(implementation = String.class)))
