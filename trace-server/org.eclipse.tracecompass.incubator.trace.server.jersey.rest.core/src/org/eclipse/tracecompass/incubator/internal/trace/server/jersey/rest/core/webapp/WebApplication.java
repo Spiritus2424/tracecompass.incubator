@@ -27,6 +27,7 @@ import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.ConfigurationManagerService;
+import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.ActionController;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.DataProviderService;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.ExperimentController;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.ExperimentService;
@@ -140,6 +141,7 @@ public class WebApplication {
         rc.register(DataProviderService.class);
         rc.register(FilterService.class);
         rc.register(HealthService.class);
+        rc.register(XmlService.class);
         rc.register(CORSFilter.class);
         rc.register(JacksonObjectMapperProvider.class);
         EncodingFilter.enableFor(rc, GZipEncoder.class);
@@ -151,6 +153,7 @@ public class WebApplication {
         rc.register(ExperimentController.class);
         rc.register(TimeGraphController.class);
         rc.register(GraphController.class);
+        rc.register(ActionController.class);
     }
 
     /**
