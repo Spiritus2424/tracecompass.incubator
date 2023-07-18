@@ -35,7 +35,7 @@ import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.TraceController;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.TraceServerOpenApiResource;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.TraceService;
-import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.XmlManagerService;
+import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.XmlController;
 import org.eclipse.tracecompass.tmf.core.TmfCommonConstants;
 import org.eclipse.tracecompass.tmf.core.TmfProjectNature;
 import org.glassfish.jersey.message.GZipEncoder;
@@ -145,6 +145,7 @@ public class WebApplication {
         
         // Controller
         rc.register(TraceController.class);
+        rc.register(XmlController.class);
         rc.register(ExperimentController.class);
     }
 
