@@ -34,8 +34,6 @@ import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.re
 import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.INVALID_PARAMETERS;
 import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.ITEMS;
 import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.ITEMS_EX;
-import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.ITEMS_EX_TT;
-import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.ITEMS_TT;
 import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.ITEMS_XY;
 import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.MARKER_CATEGORIES;
 import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.MARKER_CATEGORIES_EX;
@@ -56,8 +54,6 @@ import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.re
 import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.TIMERANGE_EX;
 import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.TIMERANGE_EX_TREE;
 import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.TIMERANGE_TREE;
-import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.TIMES_EX_TT;
-import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.TIMES_TT;
 import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.TREE_ENTRIES;
 import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.VTB;
 import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.X_Y;
@@ -97,7 +93,6 @@ import org.eclipse.tracecompass.common.core.log.TraceCompassLogUtils.FlowScopeLo
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.AnnotationCategoriesResponse;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.AnnotationResponse;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.AnnotationsQueryParameters;
-import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.ArrowsQueryParameters;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.DataProvider;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.LinesQueryParameters;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.MarkerSetsResponse;
@@ -105,11 +100,6 @@ import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.RequestedQueryParameters;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.StylesResponse;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.TableColumnHeadersResponse;
-import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.TimeGraphArrowsResponse;
-import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.TimeGraphStatesResponse;
-import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.TimeGraphTooltipResponse;
-import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.TimeGraphTreeResponse;
-import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.TooltipQueryParameters;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.TreeQueryParameters;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.VirtualTableResponse;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.XYResponse;
@@ -145,10 +135,6 @@ import org.eclipse.tracecompass.tmf.core.model.annotations.AnnotationCategoriesM
 import org.eclipse.tracecompass.tmf.core.model.annotations.AnnotationModel;
 import org.eclipse.tracecompass.tmf.core.model.annotations.IOutputAnnotationProvider;
 import org.eclipse.tracecompass.tmf.core.model.annotations.TraceAnnotationProvider;
-import org.eclipse.tracecompass.tmf.core.model.timegraph.ITimeGraphArrow;
-import org.eclipse.tracecompass.tmf.core.model.timegraph.ITimeGraphDataProvider;
-import org.eclipse.tracecompass.tmf.core.model.timegraph.ITimeGraphEntryModel;
-import org.eclipse.tracecompass.tmf.core.model.timegraph.TimeGraphModel;
 import org.eclipse.tracecompass.tmf.core.model.tree.ITmfTreeDataModel;
 import org.eclipse.tracecompass.tmf.core.model.tree.ITmfTreeDataProvider;
 import org.eclipse.tracecompass.tmf.core.model.tree.TmfTreeModel;
@@ -427,166 +413,6 @@ public class DataProviderService {
     }
 
     /**
-     * Query the provider for the time graph tree
-     *
-     * @param expUUID
-     *            {@link UUID} of the experiment to query
-     * @param outputId
-     *            Output ID for the data provider to query
-     * @param queryParameters
-     *            Parameters to fetch time graph tree as described by
-     *            {@link QueryParameters}
-     * @return {@link GenericView} with the results
-     */
-    @POST
-    @Path("/timeGraph/{outputId}/tree")
-    @Tag(name = TGR)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "API to get the Time Graph tree", description = TREE_ENTRIES, responses = {
-            @ApiResponse(responseCode = "200", description = "Returns a list of Time Graph entries. " +
-                    CONSISTENT_PARENT, content = @Content(schema = @Schema(implementation = TimeGraphTreeResponse.class))),
-            @ApiResponse(responseCode = "400", description = INVALID_PARAMETERS, content = @Content(schema = @Schema(implementation = String.class))),
-            @ApiResponse(responseCode = "404", description = PROVIDER_NOT_FOUND, content = @Content(schema = @Schema(implementation = String.class))),
-            @ApiResponse(responseCode = "405", description = NO_PROVIDER, content = @Content(schema = @Schema(implementation = String.class)))
-    })
-    public Response getTimeGraphTree(
-            @Parameter(description = EXP_UUID) @PathParam("expUUID") UUID expUUID,
-            @Parameter(description = OUTPUT_ID) @PathParam("outputId") String outputId,
-            @RequestBody(description = "Query parameters to fetch the timegraph tree. " + TIMERANGE_TREE, content = {
-                    @Content(examples = @ExampleObject("{\"parameters\":{" + TIMERANGE_EX_TREE +
-                            "}}"), schema = @Schema(implementation = TreeQueryParameters.class))
-            }, required = true) QueryParameters queryParameters) {
-        return getTree(expUUID, outputId, queryParameters);
-    }
-
-    /**
-     * Query the provider for the time graph states
-     *
-     * @param expUUID
-     *            desired experiment UUID
-     * @param outputId
-     *            Output ID for the data provider to query
-     * @param queryParameters
-     *            Parameters to fetch time graph states as described by
-     *            {@link QueryParameters}
-     * @return {@link GenericView} with the results
-     */
-    @POST
-    @Path("/timeGraph/{outputId}/states")
-    @Tag(name = TGR)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "API to get the Time Graph states", description = "Unique entry point for all TimeGraph states, ensures that the same template is followed for all views", responses = {
-            @ApiResponse(responseCode = "200", description = "Returns a list of time graph rows", content = @Content(schema = @Schema(implementation = TimeGraphStatesResponse.class))),
-            @ApiResponse(responseCode = "400", description = MISSING_PARAMETERS, content = @Content(schema = @Schema(implementation = String.class))),
-            @ApiResponse(responseCode = "404", description = PROVIDER_NOT_FOUND, content = @Content(schema = @Schema(implementation = String.class))),
-            @ApiResponse(responseCode = "405", description = NO_PROVIDER, content = @Content(schema = @Schema(implementation = String.class)))
-    })
-    public Response getStates(
-            @Parameter(description = EXP_UUID) @PathParam("expUUID") UUID expUUID,
-            @Parameter(description = OUTPUT_ID) @PathParam("outputId") String outputId,
-            @RequestBody(description = "Query parameters to fetch the timegraph states. " + TIMERANGE + " " + ITEMS + " " + FILTER_QUERY_PARAMETERS, content = {
-                    @Content(examples = @ExampleObject("{\"parameters\":{" + TIMERANGE_EX + "," + ITEMS_EX + "," + FILTER_QUERY_PARAMETERS_EX +
-                            "}}"), schema = @Schema(implementation = RequestedQueryParameters.class))
-            }, required = true) QueryParameters queryParameters) {
-
-        Response errorResponse = validateParameters(outputId, queryParameters);
-        if (errorResponse != null) {
-            return errorResponse;
-        }
-        try (FlowScopeLog scope = new FlowScopeLogBuilder(LOGGER, Level.FINE, "DataProviderService#getStates") //$NON-NLS-1$
-                .setCategory(outputId).build()) {
-            TmfExperiment tmfExperiment = this.experimentService.getTmfExperiment(expUUID);
-            if (tmfExperiment == null) {
-                return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
-            }
-
-            ITimeGraphDataProvider<@NonNull ITimeGraphEntryModel> provider = getTimeGraphProvider(tmfExperiment, outputId);
-
-            if (provider == null) {
-                // The analysis cannot be run on this trace
-                return Response.status(Status.METHOD_NOT_ALLOWED).entity(NO_PROVIDER).build();
-            }
-
-            Map<String, Object> params = queryParameters.getParameters();
-            String errorMessage = QueryParametersUtil.validateRequestedQueryParameters(params);
-            if (errorMessage != null) {
-                return Response.status(Status.BAD_REQUEST).entity(errorMessage).build();
-            }
-
-            errorMessage = QueryParametersUtil.validateFilterQueryParameters(params);
-            if (errorMessage != null) {
-                return Response.status(Status.BAD_REQUEST).entity(errorMessage).build();
-            }
-
-            TmfModelResponse<TimeGraphModel> response = provider.fetchRowModel(params, null);
-            return Response.ok(response).build();
-        }
-    }
-
-    /**
-     * Query the provider for the time graph arrows
-     *
-     * @param expUUID
-     *            desired experiment UUID
-     * @param outputId
-     *            Output ID for the data provider to query
-     * @param queryParameters
-     *            Parameters to fetch time graph arrows as described by
-     *            {@link QueryParameters}
-     * @return {@link GenericView} with the results
-     */
-    @POST
-    @Path("/timeGraph/{outputId}/arrows")
-    @Tag(name = TGR)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "API to get the Time Graph arrows", description = "Unique entry point for all TimeGraph models, " +
-            "ensures that the same template is followed for all models", responses = {
-                    @ApiResponse(responseCode = "200", description = "Returns a sampled list of TimeGraph arrows", content = @Content(schema = @Schema(implementation = TimeGraphArrowsResponse.class))),
-                    @ApiResponse(responseCode = "400", description = MISSING_PARAMETERS, content = @Content(schema = @Schema(implementation = String.class))),
-                    @ApiResponse(responseCode = "404", description = PROVIDER_NOT_FOUND, content = @Content(schema = @Schema(implementation = String.class))),
-                    @ApiResponse(responseCode = "405", description = NO_PROVIDER, content = @Content(schema = @Schema(implementation = String.class)))
-            })
-    public Response getArrows(
-            @Parameter(description = EXP_UUID) @PathParam("expUUID") UUID expUUID,
-            @Parameter(description = OUTPUT_ID) @PathParam("outputId") String outputId,
-            @RequestBody(description = "Query parameters to fetch the timegraph arrows. " + TIMERANGE, content = {
-                    @Content(examples = @ExampleObject("{\"parameters\":{" + TIMERANGE_EX +
-                            "}}"), schema = @Schema(implementation = ArrowsQueryParameters.class))
-            }, required = true) QueryParameters queryParameters) {
-
-        Response errorResponse = validateParameters(outputId, queryParameters);
-        if (errorResponse != null) {
-            return errorResponse;
-        }
-        try (FlowScopeLog scope = new FlowScopeLogBuilder(LOGGER, Level.FINE, "DataProviderService#getArrows") //$NON-NLS-1$
-                .setCategory(outputId).build()) {
-            TmfExperiment tmfExperiment = this.experimentService.getTmfExperiment(expUUID);
-            if (tmfExperiment == null) {
-                return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
-            }
-
-            ITimeGraphDataProvider<@NonNull ITimeGraphEntryModel> provider = getTimeGraphProvider(tmfExperiment, outputId);
-
-            if (provider == null) {
-                // The analysis cannot be run on this trace
-                return Response.status(Status.METHOD_NOT_ALLOWED).entity(NO_PROVIDER).build();
-            }
-
-            Map<String, Object> params = queryParameters.getParameters();
-            String errorMessage = QueryParametersUtil.validateArrowsQueryParameters(params);
-            if (errorMessage != null) {
-                return Response.status(Status.BAD_REQUEST).entity(errorMessage).build();
-            }
-
-            TmfModelResponse<@NonNull List<@NonNull ITimeGraphArrow>> response = provider.fetchArrows(params, null);
-            return Response.ok(response).build();
-        }
-    }
-
-    /**
      * Query the provider for available marker sets
      *
      * @param expUUID
@@ -781,77 +607,6 @@ public class DataProviderService {
             }
             return Response.ok(new TmfModelResponse<>(model, ITmfResponse.Status.RUNNING, CommonStatusMessage.RUNNING)).build();
         }
-    }
-
-    /**
-     * Query the provider for the time graph tooltips
-     *
-     * @param expUUID
-     *            desired experiment UUID
-     * @param outputId
-     *            Output ID for the data provider to query
-     * @param queryParameters
-     *            Parameters to fetch time graph tooltip as described by
-     *            {@link QueryParameters}
-     * @return {@link GenericView} with the results
-     */
-    @POST
-    @Path("/timeGraph/{outputId}/tooltip")
-    @Tag(name = TGR)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "API to get a Time Graph tooltip", description = "Endpoint to retrieve tooltips for time graph", responses = {
-            @ApiResponse(responseCode = "200", description = "Returns a list of tooltip keys to values", content = @Content(schema = @Schema(implementation = TimeGraphTooltipResponse.class))),
-            @ApiResponse(responseCode = "400", description = MISSING_PARAMETERS, content = @Content(schema = @Schema(implementation = String.class))),
-            @ApiResponse(responseCode = "404", description = PROVIDER_NOT_FOUND, content = @Content(schema = @Schema(implementation = String.class))),
-            @ApiResponse(responseCode = "405", description = NO_PROVIDER, content = @Content(schema = @Schema(implementation = String.class)))
-    })
-    public Response getTimeGraphTooltip(
-            @Parameter(description = EXP_UUID) @PathParam("expUUID") UUID expUUID,
-            @Parameter(description = OUTPUT_ID) @PathParam("outputId") String outputId,
-            @RequestBody(description = "Query parameters to fetch the timegraph tooltip. " + TIMES_TT + ITEMS_TT + ELEMENT, content = {
-                    @Content(examples = @ExampleObject("{\"parameters\":{" + TIMES_EX_TT + ITEMS_EX_TT + ELEMENT_EX +
-                            "}}"), schema = @Schema(implementation = TooltipQueryParameters.class))
-            }, required = true) QueryParameters queryParameters) {
-
-        Response errorResponse = validateParameters(outputId, queryParameters);
-        if (errorResponse != null) {
-            return errorResponse;
-        }
-        try (FlowScopeLog scope = new FlowScopeLogBuilder(LOGGER, Level.FINE, "DataProviderService#getTimeGraphTooltip") //$NON-NLS-1$
-                .setCategory(outputId).build()) {
-            TmfExperiment tmfExperiment = this.experimentService.getTmfExperiment(expUUID);
-            if (tmfExperiment == null) {
-                return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
-            }
-
-            ITimeGraphDataProvider<@NonNull ITimeGraphEntryModel> provider = getTimeGraphProvider(tmfExperiment, outputId);
-
-            if (provider == null) {
-                // The analysis cannot be run on this trace
-                return Response.status(Status.METHOD_NOT_ALLOWED).entity(NO_PROVIDER).build();
-            }
-
-            Map<String, Object> params = queryParameters.getParameters();
-            String errorMessage = QueryParametersUtil.validateTooltipQueryParameters(params);
-            if (errorMessage != null) {
-                return Response.status(Status.BAD_REQUEST).entity(errorMessage).build();
-            }
-
-            TmfModelResponse<@NonNull Map<@NonNull String, @NonNull String>> response = provider.fetchTooltip(params, null);
-            return Response.ok(response).build();
-        }
-    }
-
-    private ITimeGraphDataProvider<@NonNull ITimeGraphEntryModel> getTimeGraphProvider(@NonNull ITmfTrace trace, String outputId) {
-        ITimeGraphDataProvider<@NonNull ITimeGraphEntryModel> provider = manager.getOrCreateDataProvider(trace,
-                outputId, ITimeGraphDataProvider.class);
-
-        if (provider == null && outputId != null) {
-            // try and find the XML provider for the ID.
-            provider = getXmlProvider(trace, outputId, EnumSet.of(OutputType.TIME_GRAPH));
-        }
-        return provider;
     }
 
     /**
