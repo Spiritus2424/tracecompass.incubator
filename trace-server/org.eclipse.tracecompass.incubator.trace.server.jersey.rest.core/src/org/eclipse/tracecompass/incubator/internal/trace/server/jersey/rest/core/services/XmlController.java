@@ -1,14 +1,3 @@
-/*******************************************************************************
- * Copyright (c) 2018 Ericsson
- *
- * All rights reserved. This program and the accompanying materials are
- * made available under the terms of the Eclipse Public License 2.0 which
- * accompanies this distribution, and is available at
- * https://www.eclipse.org/legal/epl-2.0/
- *
- * SPDX-License-Identifier: EPL-2.0
- *******************************************************************************/
-
 package org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services;
 
 import java.io.File;
@@ -26,8 +15,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.tracecompass.internal.tmf.analysis.xml.core.module.XmlAnalysisModuleSource;
 import org.eclipse.tracecompass.internal.tmf.analysis.xml.core.module.XmlUtils;
 
 import com.google.common.collect.ImmutableList;
@@ -36,7 +23,7 @@ import com.google.common.collect.Maps;
 import io.swagger.v3.oas.annotations.Hidden;
 
 /**
- * XML analysis and provider management
+ * @author Ahmad Faour
  *
  * @author Loic Prieur-Drevon
  * @deprecated use {@link ConfigurationManagerService} instead
@@ -45,8 +32,16 @@ import io.swagger.v3.oas.annotations.Hidden;
 @Hidden
 @Path("/xml")
 @SuppressWarnings("restriction")
-public class XmlManagerService {
+public class XmlController {
 
+    private final XmlService xmlService;
+
+    /**
+     *
+     */
+    public XmlController() {
+        this.xmlService = XmlService.getInstance();
+    }
     /**
      * Getter for the list of available XML files
      *
@@ -67,7 +62,7 @@ public class XmlManagerService {
      */
     @POST
     public Response postXml(@FormParam("path") String path) {
-        return updateXml(path, true);
+        return this.xmlService.updateXml(path, true);
     }
 
     /**
@@ -79,7 +74,7 @@ public class XmlManagerService {
      */
     @PUT
     public Response putXml(@FormParam("path") String path) {
-        return updateXml(path, false);
+        return this.xmlService.updateXml(path, false);
     }
 
     /**
@@ -100,22 +95,5 @@ public class XmlManagerService {
         return Response.ok().build();
     }
 
-    private static Response updateXml(String path, boolean addFile) {
-        File file = new File(path);
 
-        IStatus status = XmlUtils.xmlValidate(file);
-        if (status.isOK()) {
-            if (addFile) {
-                status = XmlUtils.addXmlFile(file);
-            } else {
-                XmlUtils.updateXmlFile(file);
-            }
-            if (status.isOK()) {
-                XmlAnalysisModuleSource.notifyModuleChange();
-                XmlUtils.saveFilesStatus();
-                return Response.ok().build();
-            }
-        }
-        return Response.serverError().build();
-    }
 }
