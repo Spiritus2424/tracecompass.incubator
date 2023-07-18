@@ -1,14 +1,12 @@
 package org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services;
 
-import java.util.List;
+import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class GetTreeRequestDto {
-
-    @JsonProperty("requested_times")
-    List<Long> requestedTimes;
+public class GetTimeGraphArrowsRequestDto {
 
     @JsonProperty("requested_timerange")
-    TimeRange requestedTimerange;
+    @NotNull
+    public TimeRange requestedTimerange = new TimeRange();
 }
