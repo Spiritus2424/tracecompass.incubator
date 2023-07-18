@@ -142,6 +142,7 @@ public class WebApplication {
         rc.register(DataProviderService.class);
         rc.register(FilterService.class);
         rc.register(HealthService.class);
+        rc.register(XmlService.class);
         rc.register(CORSFilter.class);
         rc.register(JacksonObjectMapperProvider.class);
         EncodingFilter.enableFor(rc, GZipEncoder.class);
