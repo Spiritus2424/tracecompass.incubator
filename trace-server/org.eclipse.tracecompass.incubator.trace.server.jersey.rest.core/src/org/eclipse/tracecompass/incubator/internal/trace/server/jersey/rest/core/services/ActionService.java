@@ -11,6 +11,7 @@ import org.eclipse.tracecompass.internal.analysis.os.linux.core.threadstatus.Thr
 import org.eclipse.tracecompass.tmf.core.dataprovider.DataProviderManager;
 import org.eclipse.tracecompass.tmf.core.response.TmfModelResponse;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSignalManager;
+import org.eclipse.tracecompass.tmf.core.signal.TmfTraceSelectedSignal;
 import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
 import org.eclipse.tracecompass.tmf.core.trace.experiment.TmfExperiment;
 
@@ -44,17 +45,14 @@ public class ActionService {
 
     }
 
-    public void createAction(@NonNull TmfExperiment tmfExperiment, int entryId) {
-
-        ThreadStatusDataProvider threadStatusDataProvider = this.dataProviderManager.getOrCreateDataProvider(tmfExperiment, ThreadStatusDataProvider.ID, ThreadStatusDataProvider.class);
+    public void createAction(@NonNull TmfExperiment tmfExperiment, @NonNull String outputId, int entryId) {
+        ThreadStatusDataProvider threadStatusDataProvider = this.dataProviderManager.getOrCreateDataProvider(tmfExperiment, outputId, ThreadStatusDataProvider.class);
         if (threadStatusDataProvider != null) {
-            int threadId = threadStatusDataProvider.getThreadId(entryId);
+            int threadId = threadStatusDataProvider.findThreadId(entryId);
             TmfSignalManager.dispatchSignal(new TmfThreadSelectedSignal(this, new HostThread(tmfExperiment.getHostId(), threadId)));
             CriticalPathDataProvider criticalPathDataProvider = this.dataProviderManager.getOrCreateDataProvider(tmfExperiment, CriticalPathDataProvider.ID, CriticalPathDataProvider.class);
 
         }
-
-
     }
 
     public void deleteAction() {
@@ -69,9 +67,10 @@ public class ActionService {
         for (ITmfTrace tmfTrace : tracesForHost) {
             ThreadStatusDataProvider threadStatusDataProvider = this.dataProviderManager.getOrCreateDataProvider(tmfTrace, ThreadStatusDataProvider.ID, ThreadStatusDataProvider.class);
             if (threadStatusDataProvider != null) {
-                Integer threadId = threadStatusDataProvider.getThreadId(entryId);
+                Integer threadId = threadStatusDataProvider.findThreadId(entryId);
                 if (threadId != null) {
-                    TmfSignalManager.dispatchSignal(new TmfThreadSelectedSignal(this, new HostThread(tmfExperiment.getHostId(), threadId)));
+                    TmfSignalManager.dispatchSignal(new TmfTraceSelectedSignal(this, tmfExperiment));
+                    TmfSignalManager.dispatchSignal(new TmfThreadSelectedSignal(this, new HostThread(tmfTrace.getHostId(), threadId)));
                 }
             }
         }
