@@ -1,7 +1,7 @@
 package org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services;
 
 
-public class Action<T> {
+public class ActionModel<T> {
 
     private String id;
     private String name;
