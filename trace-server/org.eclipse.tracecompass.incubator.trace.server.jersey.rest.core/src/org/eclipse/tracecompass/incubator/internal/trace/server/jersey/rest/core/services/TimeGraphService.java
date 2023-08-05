@@ -15,12 +15,15 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.tracecompass.common.core.log.TraceCompassLog;
 import org.eclipse.tracecompass.common.core.log.TraceCompassLogUtils.FlowScopeLog;
 import org.eclipse.tracecompass.common.core.log.TraceCompassLogUtils.FlowScopeLogBuilder;
+import org.eclipse.tracecompass.tmf.core.action.ITmfActionDescriptor;
 import org.eclipse.tracecompass.tmf.core.dataprovider.DataProviderManager;
 import org.eclipse.tracecompass.tmf.core.model.timegraph.ITimeGraphArrow;
 import org.eclipse.tracecompass.tmf.core.model.timegraph.ITimeGraphDataProvider;
 import org.eclipse.tracecompass.tmf.core.model.timegraph.ITimeGraphEntryModel;
 import org.eclipse.tracecompass.tmf.core.model.timegraph.TimeGraphModel;
 import org.eclipse.tracecompass.tmf.core.response.TmfModelResponse;
+import org.eclipse.tracecompass.tmf.core.signal.TmfSignalManager;
+import org.eclipse.tracecompass.tmf.core.signal.TmfTraceSelectedSignal;
 import org.eclipse.tracecompass.tmf.core.trace.experiment.TmfExperiment;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -120,8 +123,45 @@ public class TimeGraphService {
             }
             return provider.fetchTooltip(mapParameters, null);
         }
-
     }
 
+    public TmfModelResponse<@NonNull Map<@NonNull String, @NonNull ITmfActionDescriptor>> getActionTooltips(TmfExperiment tmfExperiment, String outputId, GetTimeGraphTooltipsDto parameters) {
+        try (FlowScopeLog scope = new FlowScopeLogBuilder(this.logger, Level.FINE, "TimeGraphService#getActionTooltips").setCategory(outputId).build()) { //$NON-NLS-1$
+
+
+            ITimeGraphDataProvider<@NonNull ITimeGraphEntryModel> provider = this.dataProviderManager.getOrCreateDataProvider(tmfExperiment,
+                        outputId, ITimeGraphDataProvider.class);
+
+            if (provider == null) {
+                // The analysis cannot be run on this trace
+                throw new ClientErrorException(NO_PROVIDER, Status.METHOD_NOT_ALLOWED);
+            }
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            Map<String, Object> mapParameters = objectMapper.convertValue(parameters, Map.class);
+            String errorMessage = QueryParametersUtil.validateTooltipQueryParameters(mapParameters);
+            if (errorMessage != null) {
+                throw new BadRequestException(errorMessage);
+            }
+
+            return provider.fetchActionTooltips(mapParameters, null);
+        }
+    }
+
+    public void applyAction(TmfExperiment tmfExperiment, String outputId, String actionId, Map<String, Object> inputParameters) {
+        try (FlowScopeLog scope = new FlowScopeLogBuilder(this.logger, Level.FINE, "TimeGraphService#getTooltips").setCategory(outputId).build()) { //$NON-NLS-1$
+
+            ITimeGraphDataProvider<@NonNull ITimeGraphEntryModel> provider =  this.dataProviderManager.getOrCreateDataProvider(tmfExperiment,
+                    outputId, ITimeGraphDataProvider.class);
+
+            if (provider == null) {
+                // The analysis cannot be run on this trace
+                throw new ClientErrorException(NO_PROVIDER, Status.METHOD_NOT_ALLOWED);
+            }
+
+            TmfSignalManager.dispatchSignal(new TmfTraceSelectedSignal(this, tmfExperiment));
+            provider.applyAction(actionId, inputParameters, null);
+        }
+    }
 
 }

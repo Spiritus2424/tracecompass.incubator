@@ -23,6 +23,7 @@ import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.re
 import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.TIMES_TT;
 import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.TREE_ENTRIES;
 
+import java.util.Map;
 import java.util.UUID;
 
 import javax.validation.Valid;
@@ -226,4 +227,88 @@ public class TimeGraphController {
 
         return Response.ok(this.timeGraphService.getTooltips(tmfExperiment, outputId, body.getParameters())).build();
     }
+
+    /**
+     * Query the provider for the time graph tooltips Action
+     *
+     * @param expUUID
+     *            desired experiment UUID
+     * @param outputId
+     *            Output ID for the data provider to query
+     * @param queryParameters
+     *            Parameters to fetch time graph tooltip as described by
+     *            {@link QueryParameters}
+     * @return {@link GenericView} with the results
+     */
+    @POST
+    @Path("tooltip/actions")
+    @Tag(name = TGR)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "API to get a Time Graph Action tooltip", description = "Endpoint to retrieve tooltips for time graph", responses = {
+            @ApiResponse(responseCode = "200", description = "Returns a list of tooltip keys to values", content = @Content(schema = @Schema(implementation = TimeGraphTooltipResponse.class))),
+            @ApiResponse(responseCode = "400", description = MISSING_PARAMETERS, content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "404", description = PROVIDER_NOT_FOUND, content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "405", description = NO_PROVIDER, content = @Content(schema = @Schema(implementation = String.class)))
+    })
+    public Response getTimeGraphActionTooltips(
+            @Parameter(description = EXP_UUID) @PathParam("expUUID") UUID expUUID,
+            @Parameter(description = OUTPUT_ID) @PathParam("outputId") String outputId,
+            @RequestBody(description = "Query parameters to fetch the timegraph tooltip. " + TIMES_TT + ITEMS_TT + ELEMENT, content = {
+                    @Content(examples = @ExampleObject("{\"parameters\":{" + TIMES_EX_TT + ITEMS_EX_TT + ELEMENT_EX +
+                            "}}"), schema = @Schema(implementation = TooltipQueryParameters.class))
+            }, required = true) Body<GetTimeGraphTooltipsDto> body) {
+
+
+        TmfExperiment tmfExperiment = this.experimentService.getTmfExperiment(expUUID);
+        if (tmfExperiment == null) {
+            return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
+        }
+
+
+        return Response.ok(this.timeGraphService.getActionTooltips(tmfExperiment, outputId, body.getParameters())).build();
+    }
+
+    /**
+     * Query the provider for the time graph tooltips Action
+     *
+     * @param expUUID
+     *            desired experiment UUID
+     * @param outputId
+     *            Output ID for the data provider to query
+     * @param queryParameters
+     *            Parameters to fetch time graph tooltip as described by
+     *            {@link QueryParameters}
+     * @return {@link GenericView} with the results
+     */
+    @POST
+    @Path("tooltip/actions/{actionId}")
+    @Tag(name = TGR)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "API to get a Time Graph tooltip", description = "Endpoint to retrieve tooltips for time graph", responses = {
+            @ApiResponse(responseCode = "200", description = "Returns a list of tooltip keys to values", content = @Content(schema = @Schema(implementation = TimeGraphTooltipResponse.class))),
+            @ApiResponse(responseCode = "400", description = MISSING_PARAMETERS, content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "404", description = PROVIDER_NOT_FOUND, content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "405", description = NO_PROVIDER, content = @Content(schema = @Schema(implementation = String.class)))
+    })
+    public Response applyTimeGraphAction(
+            @Parameter(description = EXP_UUID) @PathParam("expUUID") UUID expUUID,
+            @Parameter(description = OUTPUT_ID) @PathParam("outputId") String outputId,
+            @PathParam("actionId") String actionId,
+            @RequestBody(description = "Query parameters to fetch the timegraph tooltip. " + TIMES_TT + ITEMS_TT + ELEMENT, content = {
+                    @Content(examples = @ExampleObject("{\"parameters\":{" + TIMES_EX_TT + ITEMS_EX_TT + ELEMENT_EX +
+                            "}}"), schema = @Schema(implementation = TooltipQueryParameters.class))
+            }, required = true) Body<Map<String,Object>> body) {
+
+
+        TmfExperiment tmfExperiment = this.experimentService.getTmfExperiment(expUUID);
+        if (tmfExperiment == null) {
+            return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
+        }
+
+        this.timeGraphService.applyAction(tmfExperiment, outputId, actionId, body.getParameters());
+        return Response.ok().build();
+    }
+
 }

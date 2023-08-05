@@ -150,7 +150,6 @@ public class WebApplication {
         rc.register(XmlController.class);
         rc.register(ExperimentController.class);
         rc.register(TimeGraphController.class);
-        rc.register(ActionController.class);
     }
 
     /**
