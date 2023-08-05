@@ -6,6 +6,7 @@ import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+@SuppressWarnings("javadoc")
 public class GetTimeGraphTooltipsDto {
     @JsonProperty("requested_times")
     public List<Long> requestedTimes;
@@ -16,7 +17,6 @@ public class GetTimeGraphTooltipsDto {
     @JsonProperty("requested_element")
     @NotNull
     public Element requestedElement = new Element();
-
 
     public class Element {
         @NotNull
@@ -33,8 +33,9 @@ public class GetTimeGraphTooltipsDto {
         public long destinationId;
     }
 
-    @SuppressWarnings("javadoc")
     public enum ElementType {
         state, annotation, arrow
     }
+
+
 }
