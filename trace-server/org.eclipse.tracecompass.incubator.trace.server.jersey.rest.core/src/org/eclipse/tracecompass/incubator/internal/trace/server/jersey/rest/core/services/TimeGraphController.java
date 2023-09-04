@@ -23,8 +23,10 @@ import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.re
 import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.TIMES_TT;
 import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.TREE_ENTRIES;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -47,6 +49,7 @@ import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.TreeQueryParameters;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.views.GenericView;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.views.QueryParameters;
+import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.views.TreeModelWrapper;
 import org.eclipse.tracecompass.tmf.core.trace.experiment.TmfExperiment;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -146,6 +149,18 @@ public class TimeGraphController {
         TmfExperiment tmfExperiment = this.experimentService.getTmfExperiment(expUUID);
         if (tmfExperiment == null) {
             return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
+        }
+
+        if (body.getParameters().requestedItems == null || body.getParameters().requestedItems.isEmpty()) {
+            TreeModelWrapper treeModelWrapper = (TreeModelWrapper) this.treeService.getTree(tmfExperiment, outputId, new GetTreeRequestDto(body.getParameters().requestedTimerange)).getModel();
+
+            List<Long> items = null;
+            if (treeModelWrapper != null) {
+                items = treeModelWrapper.getEntries().stream()
+                        .map(entryModel -> entryModel.getId())
+                        .collect(Collectors.toList());
+                body.getParameters().requestedItems = items;
+            }
         }
 
         return Response.ok(this.timeGraphService.getStates(tmfExperiment, outputId, body.getParameters())).build();

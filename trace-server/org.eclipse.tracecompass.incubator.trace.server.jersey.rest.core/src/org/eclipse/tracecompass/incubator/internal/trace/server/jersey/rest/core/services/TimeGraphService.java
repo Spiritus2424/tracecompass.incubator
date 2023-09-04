@@ -125,7 +125,7 @@ public class TimeGraphService {
         }
     }
 
-    public TmfModelResponse<@NonNull Map<@NonNull String, @NonNull ITmfActionDescriptor>> getActionTooltips(TmfExperiment tmfExperiment, String outputId, GetTimeGraphTooltipsDto parameters) {
+    public TmfModelResponse<@NonNull List<@NonNull ITmfActionDescriptor>> getActionTooltips(TmfExperiment tmfExperiment, String outputId, GetTimeGraphTooltipsDto parameters) {
         try (FlowScopeLog scope = new FlowScopeLogBuilder(this.logger, Level.FINE, "TimeGraphService#getActionTooltips").setCategory(outputId).build()) { //$NON-NLS-1$
 
 
@@ -159,8 +159,13 @@ public class TimeGraphService {
                 throw new ClientErrorException(NO_PROVIDER, Status.METHOD_NOT_ALLOWED);
             }
 
+
+            // TODO: Remove when this issue https://github.com/eclipse-cdt-cloud/theia-trace-extension/issues/1003 is fixed
             TmfSignalManager.dispatchSignal(new TmfTraceSelectedSignal(this, tmfExperiment));
-            provider.applyAction(actionId, inputParameters, null);
+            if (!provider.applyAction(actionId, inputParameters, null)) {
+                throw new BadRequestException("Not able to applied the action: " + actionId); //$NON-NLS-1$
+            }
+
         }
     }
 
