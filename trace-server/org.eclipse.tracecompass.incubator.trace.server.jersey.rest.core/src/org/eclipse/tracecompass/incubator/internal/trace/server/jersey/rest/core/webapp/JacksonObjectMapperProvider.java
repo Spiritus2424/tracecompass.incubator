@@ -14,9 +14,11 @@ package org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.cor
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;
 
+import org.eclipse.tracecompass.analysis.os.linux.core.execution.graph.OsWorker;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.views.TreeModelWrapper.TreeColumnHeader;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.Experiment;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.Trace;
+import org.eclipse.tracecompass.internal.analysis.graph.core.graph.historytree.TmfVertex;
 import org.eclipse.tracecompass.internal.provisional.tmf.core.model.table.IVirtualTableLine;
 import org.eclipse.tracecompass.internal.provisional.tmf.core.model.table.VirtualTableCell;
 import org.eclipse.tracecompass.internal.tmf.core.markers.MarkerSet;
