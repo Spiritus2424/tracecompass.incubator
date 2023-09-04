@@ -30,7 +30,6 @@ public class RosMessagesTransportEventKey extends TcpEventKey {
     private static final HashFunction HF = Objects.requireNonNull(Hashing.goodFastHash(32));
 
     private final NetworkConnection fConnectionInfo;
-    private final long fFlags;
 
     /**
      * Constructor
@@ -48,15 +47,6 @@ public class RosMessagesTransportEventKey extends TcpEventKey {
     public RosMessagesTransportEventKey(long sequence, long ack, long flags, NetworkConnection connectionInfo) {
         super(sequence, ack, flags);
         fConnectionInfo = connectionInfo;
-        // Needed for match confirmation
-        fFlags = flags;
-    }
-
-    /**
-     * @return the flags associated with this packet event
-     */
-    public long getFlags() {
-        return fFlags;
     }
 
     /**
@@ -84,7 +74,7 @@ public class RosMessagesTransportEventKey extends TcpEventKey {
     public String toString() {
         StringBuilder b = new StringBuilder();
         b.append("RosMessagesTransportEventKey:\n"); //$NON-NLS-1$
-        b.append("\t\tflags: " + fFlags); //$NON-NLS-1$
+        b.append("\t\tflags: " + this.getFlags()); //$NON-NLS-1$
         b.append("\n"); //$NON-NLS-1$
         return b.toString();
     }
