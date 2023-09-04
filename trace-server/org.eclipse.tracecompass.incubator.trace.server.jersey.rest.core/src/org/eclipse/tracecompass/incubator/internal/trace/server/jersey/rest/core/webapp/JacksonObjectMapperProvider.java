@@ -25,6 +25,7 @@ import org.eclipse.tracecompass.internal.tmf.core.markers.MarkerSet;
 import org.eclipse.tracecompass.tmf.core.config.ITmfConfigParamDescriptor;
 import org.eclipse.tracecompass.tmf.core.config.ITmfConfiguration;
 import org.eclipse.tracecompass.tmf.core.config.ITmfConfigurationSourceType;
+import org.eclipse.tracecompass.tmf.core.event.matching.TcpEventKey;
 import org.eclipse.tracecompass.tmf.core.model.DataProviderDescriptor;
 import org.eclipse.tracecompass.tmf.core.model.OutputElementStyle;
 import org.eclipse.tracecompass.tmf.core.model.annotations.Annotation;
@@ -78,6 +79,9 @@ public class JacksonObjectMapperProvider implements ContextResolver<ObjectMapper
             module.addSerializer(ITmfConfiguration.class, new TmfConfigurationSerializer());
             module.addSerializer(ITmfConfigurationSourceType.class, new TmfConfigurationSourceTypeSerializer());
             module.addSerializer(ITmfConfigParamDescriptor.class, new TmfConfigParamDescriptorSerializer());
+            module.addSerializer(OsWorker.class, new OsWorkerSerializer());
+            module.addSerializer(TcpEventKey.class, new TcpEventKeySerializer());
+            module.addSerializer(TmfVertex.class, new TmfVertexSerializer());
 
             // create JsonProvider to provide custom ObjectMapper
             JacksonJaxbJsonProvider provider = new JacksonJaxbJsonProvider();
