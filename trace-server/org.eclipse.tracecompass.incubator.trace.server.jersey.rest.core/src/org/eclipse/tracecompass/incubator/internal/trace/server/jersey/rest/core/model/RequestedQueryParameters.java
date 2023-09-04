@@ -42,8 +42,8 @@ public interface RequestedQueryParameters {
         @Schema(required = true)
         int[] getRequestedItems();
 
-        @JsonProperty("filter_query_parameters")
-        @Schema(required = false)
-        RequestedFilterQueryParameters getFilterQueryParameters();
+//        @JsonProperty("filter_query_parameters")
+//        @Schema(required = false)
+//        RequestedFilterQueryParameters getFilterQueryParameters();
     }
 }
