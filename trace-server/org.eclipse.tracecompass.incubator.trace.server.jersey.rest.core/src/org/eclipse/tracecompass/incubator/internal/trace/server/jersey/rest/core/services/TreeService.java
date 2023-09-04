@@ -15,9 +15,11 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.tracecompass.common.core.log.TraceCompassLog;
 import org.eclipse.tracecompass.common.core.log.TraceCompassLogUtils.FlowScopeLog;
 import org.eclipse.tracecompass.common.core.log.TraceCompassLogUtils.FlowScopeLogBuilder;
+import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.views.TreeModelWrapper;
 import org.eclipse.tracecompass.tmf.core.dataprovider.DataProviderManager;
 import org.eclipse.tracecompass.tmf.core.model.tree.ITmfTreeDataModel;
 import org.eclipse.tracecompass.tmf.core.model.tree.ITmfTreeDataProvider;
+import org.eclipse.tracecompass.tmf.core.model.tree.TmfTreeModel;
 import org.eclipse.tracecompass.tmf.core.response.TmfModelResponse;
 import org.eclipse.tracecompass.tmf.core.trace.experiment.TmfExperiment;
 
@@ -76,7 +78,13 @@ public class TreeService {
             if (errorMessage != null) {
                 throw new BadRequestException(errorMessage);
             }
-            return provider.fetchTree(mapParameters, null);
+
+//            return provider.fetchTree(mapParameters, null);
+             TmfModelResponse<?> treeResponse = provider.fetchTree(mapParameters, null);
+             Object model = treeResponse.getModel();
+             return (model instanceof TmfTreeModel) ?
+                     new TmfModelResponse<>(new TreeModelWrapper((TmfTreeModel<@NonNull ITmfTreeDataModel>) model), treeResponse.getStatus(), treeResponse.getStatusMessage()) :
+                         treeResponse;
         }
     }
 
