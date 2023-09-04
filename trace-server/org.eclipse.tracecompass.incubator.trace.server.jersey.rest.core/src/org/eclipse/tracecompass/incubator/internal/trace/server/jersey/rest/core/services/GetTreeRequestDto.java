@@ -15,4 +15,9 @@ public class GetTreeRequestDto {
     public GetTreeRequestDto(TimeRange timeRange) {
         this.requestedTimerange = timeRange;
     }
+
+    public GetTreeRequestDto() {
+        this.requestedTimes = null;
+        this.requestedTimerange = null;
+    }
 }
