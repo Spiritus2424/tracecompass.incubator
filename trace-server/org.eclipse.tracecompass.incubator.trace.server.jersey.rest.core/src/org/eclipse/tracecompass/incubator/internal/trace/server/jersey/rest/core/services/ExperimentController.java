@@ -136,7 +136,7 @@ public class ExperimentController {
         ResponseBuilder responseBuilder = null;
         try {
             responseBuilder = Response.ok(this.experimentService.createExperiment(body.getParameters().experimentName, traceResources));
-        } catch (ServerErrorException e) {
+        } catch (ClientErrorException | ServerErrorException e) {
             responseBuilder = Response.status(e.getResponse().getStatus(), e.getMessage());
         }
 
