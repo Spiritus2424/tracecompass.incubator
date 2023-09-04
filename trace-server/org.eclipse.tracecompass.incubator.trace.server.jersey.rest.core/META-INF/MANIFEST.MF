@@ -36,7 +36,8 @@ Require-Bundle: org.eclipse.core.runtime,
  org.glassfish.hk2.osgi-resource-locator,
  io.swagger.core.v3.swagger-jaxrs2,
  io.swagger.core.v3.swagger-annotations,
- org.eclipse.tracecompass.analysis.graph.core;bundle-version="4.1.0"
+ org.eclipse.tracecompass.analysis.graph.core,
+ org.eclipse.tracecompass.lttng2.kernel.core
 Import-Package: com.fasterxml.jackson.module.jaxb,
  com.fasterxml.jackson.module.jaxb.deser,
  com.fasterxml.jackson.module.jaxb.ser,
