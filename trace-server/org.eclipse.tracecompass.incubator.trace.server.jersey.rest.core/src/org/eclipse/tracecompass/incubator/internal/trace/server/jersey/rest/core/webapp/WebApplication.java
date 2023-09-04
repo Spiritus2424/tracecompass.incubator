@@ -32,6 +32,7 @@ import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.ExperimentController;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.ExperimentService;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.FilterService;
+import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.GraphController;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.HealthService;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.TimeGraphController;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.TraceController;
@@ -150,6 +151,7 @@ public class WebApplication {
         rc.register(XmlController.class);
         rc.register(ExperimentController.class);
         rc.register(TimeGraphController.class);
+        rc.register(GraphController.class);
     }
 
     /**
