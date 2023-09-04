@@ -13,6 +13,5 @@ public class GetTimeGraphStatesRequestDto {
     public TimeRange requestedTimerange = new TimeRange();
 
     @JsonProperty("requested_items")
-    @NotNull
-    public List<Integer> requestedItems = new ArrayList<>();
+    public List<Long> requestedItems = new ArrayList<>();
 }
