@@ -6,6 +6,10 @@ public class Body<T> {
     @NotNull
     private T parameters;
 
+    public Body(T parameters) {
+        this.parameters = parameters;
+    }
+
     @SuppressWarnings("null")
     public Body() {}
 
