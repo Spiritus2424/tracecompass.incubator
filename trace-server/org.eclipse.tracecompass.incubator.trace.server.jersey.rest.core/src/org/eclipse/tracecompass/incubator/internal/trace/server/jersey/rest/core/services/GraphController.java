@@ -18,6 +18,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.tracecompass.analysis.graph.core.base.IGraphWorker;
 import org.eclipse.tracecompass.analysis.graph.core.graph.ITmfVertex;
 import org.eclipse.tracecompass.tmf.core.event.matching.IEventMatchingKey;
@@ -25,6 +26,11 @@ import org.eclipse.tracecompass.tmf.core.event.matching.TmfEventMatching.Directi
 import org.eclipse.tracecompass.tmf.core.trace.experiment.TmfExperiment;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
+/*
+ * TODO
+ * - Add Get Previous Worker in case that we have a ThreadId == -1
+ * - Think about the API (Resource, hierarchy, DataProvider)
+ */
 
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
@@ -32,6 +38,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Path("/experiments/{expUUID}/graph")
 @SuppressWarnings("javadoc")
 public class GraphController {
+
+
+
 
     private final ExperimentService experimentService;
     private final GraphService graphService;
@@ -53,6 +62,22 @@ public class GraphController {
         return Response.ok(graphWorker).build();
     }
 
+    // @Path("workers/{workerId}/vertexes/{timestamp}")
+    // @GET
+    // public Response getPreviousWorker(@PathParam("expUUID") UUID expUUID, @PathParam("workerId") Integer workerId, @PathParam("timestamp") long timestamp) {
+    //     TmfExperiment tmfExperiment = this.experimentService.getTmfExperiment(expUUID);
+    //     if (tmfExperiment == null) {
+    //         return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
+    //     }
+    //     TimeRange timeRange = new TimeRange();
+    //     timeRange.start = 1539975457980191124L;
+    //     timeRange.end = 1539975466296685583L;
+
+    //     List<@NonNull ITmfVertex> tmfVertexes = this.graphService.getUnmatechedTmfVertex(tmfExperiment, timeRange, null);
+    //     IGraphWorker previousGraphWorker = this.graphService.getPreviousWorker(tmfExperiment, workerId, timestamp);
+
+    //     return Response.ok(previousGraphWorker).build();
+    // }
 
     @Path("vertexes")
     @POST
@@ -78,19 +103,16 @@ public class GraphController {
         return Response.ok(indexes).build();
     }
 
-//    @POST
-//    public Response graphTest(@PathParam("expUUID") UUID expUuid, Body<TimeRange> body) {
-//        TmfExperiment tmfExperiment = this.experimentService.getTmfExperiment(expUuid);
-//        if (tmfExperiment == null) {
-//            return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
-//        }
-////        this.graphService.test1(tmfExperiment, timestamp.getParameters());
-////        this.graphService.test2(tmfExperiment);
-//
-//        List<ITmfVertex> vertexes = this.graphService.getUnmatechedTmfVertex(tmfExperiment, body.getParameters());
-//        return Response.ok(vertexes).build();
-//    }
+    @Path("critical-path")
+    @POST
+    public Response createCriticalPath(@PathParam("expUUID") UUID expUUID, Body<CreateCriticalPathDto> body) {
+        TmfExperiment tmfExperiment = this.experimentService.getTmfExperiment(expUUID);
+        if (tmfExperiment == null) {
+            return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
+        }
 
+        return Response.ok(this.graphService.createCriticalPath(tmfExperiment, body.getParameters().startVertex, body.getParameters().endVertex)).build();
+    }
 
 
 }
