@@ -12,12 +12,10 @@ public class GetTreeRequestDto {
     @JsonProperty("requested_timerange")
     public TimeRange requestedTimerange;
 
+    public GetTreeRequestDto() {
+    }
     public GetTreeRequestDto(TimeRange timeRange) {
         this.requestedTimerange = timeRange;
     }
 
-    public GetTreeRequestDto() {
-        this.requestedTimes = null;
-        this.requestedTimerange = null;
-    }
 }
