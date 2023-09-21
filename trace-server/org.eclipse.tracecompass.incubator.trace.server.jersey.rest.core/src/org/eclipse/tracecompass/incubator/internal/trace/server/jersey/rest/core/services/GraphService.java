@@ -239,6 +239,7 @@ public class GraphService {
                     osCriticalPathAlgorithm = new OSCriticalPathAlgorithm(tmfGraph);
                 }
             }
+
         }
         return osCriticalPathAlgorithm;
     }
