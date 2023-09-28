@@ -86,7 +86,7 @@ public class GraphController {
             return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
         }
 
-        List<ITmfVertex> vertexes = this.graphService.getUnmatechedTmfVertex(tmfExperiment, body.getParameters(), direction);
+        List<ITmfVertex> vertexes = this.graphService.getUnmatchedTmfVertex(tmfExperiment, body.getParameters(), direction);
         return Response.ok(vertexes).build();
     }
 
@@ -113,5 +113,15 @@ public class GraphController {
         return Response.ok(this.graphService.createCriticalPath(tmfExperiment, body.getParameters().startVertex, body.getParameters().endVertex)).build();
     }
 
-
+//    @Path("event-matching-vertexes")
+//    @POST
+//    public Response getEventMatchingTmfVertex(@PathParam("expUUID") UUID expUuid, @QueryParam("direction") Direction direction, @QueryParam("start") long start, @QueryParam("end") long end) {
+//        TmfExperiment tmfExperiment = this.experimentService.getTmfExperiment(expUuid);
+//        if (tmfExperiment == null) {
+//            return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
+//        }
+//
+//        List<ITmfVertex> vertexes = this.graphService.getEventMatchingTmfVertex(tmfExperiment, start, end, direction);
+//        return Response.ok(vertexes).build();
+//    }
 }

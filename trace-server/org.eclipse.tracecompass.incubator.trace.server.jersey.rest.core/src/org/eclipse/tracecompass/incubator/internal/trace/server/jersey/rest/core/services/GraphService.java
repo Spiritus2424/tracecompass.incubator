@@ -98,6 +98,43 @@ public class GraphService {
         return indexes;
     }
 
+    public List<@NonNull ITmfVertex> getUnmatchedTmfVertex(TmfExperiment tmfExperiment, TimeRange timeRange, Direction direction) {
+        List<@NonNull ITmfVertex> tmfVertexes = null;
+        OsExecutionGraphProvider osExecutionGraphProvider = getOsExecutionGraphProvider(tmfExperiment);
+        if (osExecutionGraphProvider != null) {
+            for (ITraceEventHandler traceEventHandler: osExecutionGraphProvider.getHandlers()) {
+                if (traceEventHandler instanceof TraceEventHandlerExecutionGraph) {
+                    TraceEventHandlerExecutionGraph traceEventHandlerExecutionGraph = (TraceEventHandlerExecutionGraph) traceEventHandler;
+                    tmfVertexes = traceEventHandlerExecutionGraph.findUnmatchedTmfVertex(timeRange.start, timeRange.end, direction == null ? Optional.empty() : Optional.of(direction));
+                    break;
+                }
+            }
+
+        }
+
+        return tmfVertexes;
+    }
+
+//    public void getEventMatchingTmfVertex(TmfExperiment tmfExperiment, long start, long end, Direction direction) {
+//        List<@NonNull ITmfVertex> tmfVertexes = null;
+//
+//        OsExecutionGraphProvider osExecutionGraphProvider = getOsExecutionGraphProvider(tmfExperiment);
+//
+//        if (osExecutionGraphProvider != null) {
+//            for (ITraceEventHandler traceEventHandler: osExecutionGraphProvider.getHandlers()) {
+//                if (traceEventHandler instanceof TraceEventHandlerExecutionGraph) {
+//                    TraceEventHandlerExecutionGraph traceEventHandlerExecutionGraph = (TraceEventHandlerExecutionGraph) traceEventHandler;
+//                    tmfVertexes = traceEventHandlerExecutionGraph.findUnmatchedTmfVertex(start, end, direction == null ? Optional.empty() : Optional.of(direction));
+//                    break;
+//                }
+//            }
+//
+//        }
+//
+//        return tmfVertexes;
+//    }
+
+
     public IEventMatchingKey getEventKey(TmfExperiment tmfExperiment, TmfVertex tmfVertex, Direction direction) {
         IEventMatchingKey eventKey = null;
         OsExecutionGraphProvider osExecutionGraphProvider = getOsExecutionGraphProvider(tmfExperiment);
@@ -113,25 +150,6 @@ public class GraphService {
         }
 
         return eventKey;
-    }
-
-    public List<@NonNull ITmfVertex> getUnmatechedTmfVertex(TmfExperiment tmfExperiment, TimeRange timeRange, Direction direction) {
-        List<@NonNull ITmfVertex> tmfVertexes = null;
-
-        OsExecutionGraphProvider osExecutionGraphProvider = getOsExecutionGraphProvider(tmfExperiment);
-
-        if (osExecutionGraphProvider != null) {
-            for (ITraceEventHandler traceEventHandler: osExecutionGraphProvider.getHandlers()) {
-                if (traceEventHandler instanceof TraceEventHandlerExecutionGraph) {
-                    TraceEventHandlerExecutionGraph traceEventHandlerExecutionGraph = (TraceEventHandlerExecutionGraph) traceEventHandler;
-                    tmfVertexes = traceEventHandlerExecutionGraph.findUnmatchedTmfVertex(timeRange.start, timeRange.end, direction == null ? Optional.empty() : Optional.of(direction));
-                    break;
-                }
-            }
-
-        }
-
-        return tmfVertexes;
     }
 
 
@@ -184,8 +202,6 @@ public class GraphService {
 
         return new GraphDto(rowModels, arrows);
     }
-
-
 
     private static @Nullable ITmfGraph getTmfGraph(TmfExperiment tmfExperiment) {
         OsExecutionGraph osExecutionGraph = (OsExecutionGraph) tmfExperiment.getAnalysisModule(OsExecutionGraph.ANALYSIS_ID);
