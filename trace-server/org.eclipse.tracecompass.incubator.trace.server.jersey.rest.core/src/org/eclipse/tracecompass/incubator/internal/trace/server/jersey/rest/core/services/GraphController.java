@@ -79,8 +79,8 @@ public class GraphController {
     // }
 
     @Path("vertexes")
-    @POST
-    public Response getUnmatchedTmfVertex(@PathParam("expUUID") UUID expUuid, @QueryParam("direction") Direction direction, Body<TimeRange> body) {
+    @GET
+    public Response getUnmatchedTmfVertex(@PathParam("expUUID") UUID expUuid, @QueryParam("direction") Direction direction, @QueryParam("start") Long start, @QueryParam("end") Long end) {
         TmfExperiment tmfExperiment = this.experimentService.getTmfExperiment(expUuid);
         if (tmfExperiment == null) {
             return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();

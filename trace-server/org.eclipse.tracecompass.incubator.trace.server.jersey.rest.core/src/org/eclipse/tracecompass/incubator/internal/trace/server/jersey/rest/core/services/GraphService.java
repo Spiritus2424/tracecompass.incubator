@@ -14,6 +14,7 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tracecompass.analysis.graph.core.base.IGraphWorker;
 import org.eclipse.tracecompass.analysis.graph.core.building.ITraceEventHandler;
 import org.eclipse.tracecompass.analysis.graph.core.criticalpath.CriticalPathAlgorithmException;
+import org.eclipse.tracecompass.analysis.graph.core.criticalpath.OSCriticalPathModule;
 import org.eclipse.tracecompass.analysis.graph.core.graph.ITmfGraph;
 import org.eclipse.tracecompass.analysis.graph.core.graph.ITmfVertex;
 import org.eclipse.tracecompass.analysis.os.linux.core.execution.graph.OsExecutionGraph;
@@ -169,29 +170,33 @@ public class GraphService {
     //     return previousTmfVertex;
     // }
 
-    public GraphDto createCriticalPath(TmfExperiment tmfExperiment, TmfVertex startVertex, TmfVertex endVertex) {
+    public GraphDto createCriticalPath(TmfExperiment tmfExperiment, VertexDto startVertex, VertexDto endVertex) {
         OSCriticalPathAlgorithm osCriticalPathAlgorithm = getOsCriticalPathAlgorithm(tmfExperiment);
-        ITmfGraph tmfGraph;
+        OSCriticalPathModule osCriticalPathModule = getOsCriticalPathModule(tmfExperiment);
         List<@NonNull ITimeGraphRowModel> rowModels = new ArrayList<>();
         List<@NonNull ITimeGraphArrow> arrows = new ArrayList<>();
-        if (osCriticalPathAlgorithm != null) {
+        if (osCriticalPathAlgorithm != null && osCriticalPathModule != null) {
             try {
-                tmfGraph = osCriticalPathAlgorithm.computeCriticalPath(osCriticalPathAlgorithm.getGraph(), startVertex, endVertex);
-                ITmfVertex headVertex = tmfGraph.getHead();
-                if (headVertex != null) {
-                    IGraphWorker graphWorker = tmfGraph.getParentOf(headVertex);
-                    if (graphWorker != null) {
-                        OsCriticalPathVisitor osCriticalPathVisitor = new OsCriticalPathVisitor(tmfExperiment, tmfGraph, graphWorker);
+                ITmfGraph criticalPathGraph = osCriticalPathModule.createGraph();
+                if (criticalPathGraph != null) {
+                    ITmfGraph tmfGraph = osCriticalPathAlgorithm.computeCriticalPath(criticalPathGraph, new TmfVertex(startVertex.timestamp, startVertex.workerId), new TmfVertex(endVertex.timestamp, endVertex.workerId));
+                    ITmfVertex headVertex = tmfGraph.getHead();
+                    if (headVertex != null) {
+                        IGraphWorker graphWorker = tmfGraph.getParentOf(headVertex);
+                        if (graphWorker != null) {
+                            OsCriticalPathVisitor osCriticalPathVisitor = new OsCriticalPathVisitor(tmfExperiment, tmfGraph, graphWorker);
 
-                        arrows = osCriticalPathVisitor.getGraphLinks();
-                        for (Long key: osCriticalPathVisitor.getEntryIdToStates().keys()) {
-                            Collection<ITimeGraphState> states = osCriticalPathVisitor.getEntryIdToStates().asMap().get(key);
-                            if (states != null) {
-                                rowModels.add(new TimeGraphRowModel(key, states.stream().collect(Collectors.toList())));
+                            arrows = osCriticalPathVisitor.getGraphLinks();
+                            System.out.println(osCriticalPathVisitor.getEntryIdToStates().keySet().size());
+                            for (Long key: osCriticalPathVisitor.getEntryIdToStates().keySet()) {
+                                Collection<ITimeGraphState> states = osCriticalPathVisitor.getEntryIdToStates().asMap().get(key);
+                                if (states != null) {
+                                    rowModels.add(new TimeGraphRowModel(key, states.stream().collect(Collectors.toList())));
+                                }
                             }
                         }
-                    }
 
+                    }
                 }
             } catch (CriticalPathAlgorithmException e) {
                 // TODO Auto-generated catch block
@@ -234,7 +239,8 @@ public class GraphService {
         if (osExecutionGraph != null) {
             osExecutionGraph.schedule();
             if (osExecutionGraph.waitForCompletion()) {
-                ITmfGraph tmfGraph = osExecutionGraph.getCriticalPathGraph();
+
+                ITmfGraph tmfGraph = osExecutionGraph.getTmfGraph();
                 if (tmfGraph != null) {
                     osCriticalPathAlgorithm = new OSCriticalPathAlgorithm(tmfGraph);
                 }
@@ -242,5 +248,18 @@ public class GraphService {
 
         }
         return osCriticalPathAlgorithm;
+    }
+
+    private static @Nullable OSCriticalPathModule getOsCriticalPathModule(TmfExperiment tmfExperiment) {
+        OsExecutionGraph osExecutionGraph = (OsExecutionGraph) tmfExperiment.getAnalysisModule(OsExecutionGraph.ANALYSIS_ID);
+        OSCriticalPathModule osCriticalPathModule = null;
+        if (osExecutionGraph != null) {
+            osExecutionGraph.schedule();
+            if (osExecutionGraph.waitForCompletion()) {
+
+                osCriticalPathModule = (OSCriticalPathModule) osExecutionGraph.getCriticalPathModule();
+            }
+        }
+        return osCriticalPathModule;
     }
 }
