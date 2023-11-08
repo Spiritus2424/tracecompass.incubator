@@ -32,6 +32,7 @@ FROM alpine:3.18.0
 ENV JAVA_MINIMAL="/opt/java-minimal"
 ENV PATH="$PATH:$JAVA_MINIMAL/bin"
 ENV TRACESERVER_PORT="8080"
+ENV TRACING_SERVER_ROOT=""
 
 # Required dependency for Eclipse Trace Compass Server
 RUN apk --no-cache add libc6-compat
