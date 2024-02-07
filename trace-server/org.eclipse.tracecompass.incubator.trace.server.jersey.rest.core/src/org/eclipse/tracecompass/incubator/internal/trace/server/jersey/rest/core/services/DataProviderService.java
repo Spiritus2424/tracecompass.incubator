@@ -30,7 +30,6 @@ import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.re
 import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.INVALID_PARAMETERS;
 import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.ITEMS;
 import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.ITEMS_EX;
-import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.ITEMS_XY;
 import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.MARKER_CATEGORIES;
 import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.MARKER_CATEGORIES_EX;
 import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.MARKER_SET;
@@ -51,7 +50,6 @@ import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.re
 import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.TIMERANGE_TREE;
 import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.TREE_ENTRIES;
 import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.VTB;
-import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.X_Y;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -91,12 +89,10 @@ import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.LinesQueryParameters;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.MarkerSetsResponse;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.OptionalQueryParameters;
-import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.RequestedQueryParameters;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.StylesResponse;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.TableColumnHeadersResponse;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.TreeQueryParameters;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.VirtualTableResponse;
-import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.XYResponse;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.XYTreeResponse;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.views.GenericView;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.model.views.QueryParameters;
@@ -132,8 +128,6 @@ import org.eclipse.tracecompass.tmf.core.model.annotations.TraceAnnotationProvid
 import org.eclipse.tracecompass.tmf.core.model.tree.ITmfTreeDataModel;
 import org.eclipse.tracecompass.tmf.core.model.tree.ITmfTreeDataProvider;
 import org.eclipse.tracecompass.tmf.core.model.tree.TmfTreeModel;
-import org.eclipse.tracecompass.tmf.core.model.xy.ITmfTreeXYDataProvider;
-import org.eclipse.tracecompass.tmf.core.model.xy.ITmfXyModel;
 import org.eclipse.tracecompass.tmf.core.response.ITmfResponse;
 import org.eclipse.tracecompass.tmf.core.response.TmfModelResponse;
 import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
@@ -145,7 +139,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
-import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -276,134 +269,6 @@ public class DataProviderService {
                             "}}"), schema = @Schema(implementation = TreeQueryParameters.class))
             }, required = true) QueryParameters queryParameters) {
         return getTree(expUUID, outputId, queryParameters);
-    }
-
-    /**
-     * Query the provider for the XY tree
-     *
-     * @param expUUID
-     *            desired experiment UUID
-     * @param outputId
-     *            Output ID for the data provider to query
-     * @param queryParameters
-     *            Parameters to fetch an XY tree as described by
-     *            {@link QueryParameters}
-     * @return an {@link GenericView} with the results
-     */
-    @POST
-    @Path("/XY/{outputId}/tree")
-    @Tag(name = X_Y)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "API to get the XY tree", description = TREE_ENTRIES, responses = {
-            @ApiResponse(responseCode = "200", description = "Returns a list of XY entries. " +
-                    CONSISTENT_PARENT, content = @Content(schema = @Schema(implementation = XYTreeResponse.class))),
-            @ApiResponse(responseCode = "400", description = INVALID_PARAMETERS, content = @Content(schema = @Schema(implementation = String.class))),
-            @ApiResponse(responseCode = "404", description = PROVIDER_NOT_FOUND, content = @Content(schema = @Schema(implementation = String.class))),
-            @ApiResponse(responseCode = "405", description = NO_PROVIDER, content = @Content(schema = @Schema(implementation = String.class)))
-    })
-    public Response getXYTree(
-            @Parameter(description = EXP_UUID) @PathParam("expUUID") UUID expUUID,
-            @Parameter(description = OUTPUT_ID) @PathParam("outputId") String outputId,
-            @RequestBody(description = "Query parameters to fetch the XY tree. " + TIMERANGE_TREE, content = {
-                    @Content(examples = @ExampleObject("{\"parameters\":{" + TIMERANGE_EX_TREE +
-                            "}}"), schema = @Schema(implementation = TreeQueryParameters.class))
-            }, required = true) QueryParameters queryParameters) {
-        return getTree(expUUID, outputId, queryParameters);
-    }
-
-    /**
-     * Query the provider for the XY view
-     *
-     * @param expUUID
-     *            {@link UUID} of the experiment to query
-     * @param outputId
-     *            Output ID for the data provider to query
-     * @param queryParameters
-     *            Parameters to fetch XY as described by {@link QueryParameters}
-     * @return an {@link GenericView} with the results
-     */
-    @POST
-    @Path("/XY/{outputId}/xy")
-    @Tag(name = X_Y)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "API to get the XY model", description = "Unique endpoint for all xy models, " +
-            "ensures that the same template is followed for all endpoints.", responses = {
-                    @ApiResponse(responseCode = "200", description = "Return the queried XYResponse", content = @Content(schema = @Schema(implementation = XYResponse.class))),
-                    @ApiResponse(responseCode = "400", description = MISSING_PARAMETERS, content = @Content(schema = @Schema(implementation = String.class))),
-                    @ApiResponse(responseCode = "404", description = PROVIDER_NOT_FOUND, content = @Content(schema = @Schema(implementation = String.class))),
-                    @ApiResponse(responseCode = "405", description = NO_PROVIDER, content = @Content(schema = @Schema(implementation = String.class)))
-            })
-    public Response getXY(
-            @Parameter(description = EXP_UUID) @PathParam("expUUID") UUID expUUID,
-            @Parameter(description = OUTPUT_ID) @PathParam("outputId") String outputId,
-            @RequestBody(description = "Query parameters to fetch the XY model. " + TIMERANGE + " " + ITEMS_XY, content = {
-                    @Content(examples = @ExampleObject("{\"parameters\":{" + TIMERANGE_EX + "," + ITEMS_EX +
-                            "}}"), schema = @Schema(implementation = RequestedQueryParameters.class))
-            }, required = true) QueryParameters queryParameters) {
-
-        Response errorResponse = validateParameters(outputId, queryParameters);
-        if (errorResponse != null) {
-            return errorResponse;
-        }
-        try (FlowScopeLog scope = new FlowScopeLogBuilder(LOGGER, Level.FINE, "DataProviderService#getXY") //$NON-NLS-1$
-                .setCategory(outputId).build()) {
-            TmfExperiment tmfExperiment =  this.experimentService.getTmfExperiment(expUUID);
-            if (tmfExperiment == null) {
-                return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
-            }
-
-            ITmfTreeXYDataProvider<@NonNull ITmfTreeDataModel> provider = manager.getOrCreateDataProvider(tmfExperiment,
-                    outputId, ITmfTreeXYDataProvider.class);
-
-            if (provider == null) {
-                // try and find the XML provider for the ID.
-                provider = getXmlProvider(tmfExperiment, outputId, EnumSet.of(OutputType.XY));
-            }
-
-            if (provider == null) {
-                // The analysis cannot be run on this trace
-                return Response.status(Status.METHOD_NOT_ALLOWED).entity(NO_PROVIDER).build();
-            }
-
-            Map<String, Object> params = queryParameters.getParameters();
-            String errorMessage = QueryParametersUtil.validateRequestedQueryParameters(params);
-            if (errorMessage != null) {
-                return Response.status(Status.BAD_REQUEST).entity(errorMessage).build();
-            }
-
-            TmfModelResponse<@NonNull ITmfXyModel> response = provider.fetchXY(params, null);
-            return Response.ok(response).build();
-        }
-    }
-
-    /**
-     * Query the provider for XY tooltip, currently not implemented
-     *
-     * @param expUUID
-     *            {@link UUID} of the experiment to query
-     * @param outputId
-     *            Output ID for the data provider to query
-     * @param xValue
-     *            Given X value to fetch the tooltip
-     * @param yValue
-     *            Given Y value to help fetch the tooltip, used to get the right
-     *            point if two points have the same X value
-     * @param entryId
-     *            Entry Id or series Id
-     * @return {@link GenericView} with the results
-     */
-    @GET
-    @Hidden
-    @Path("/XY/{outputId}/tooltip")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getXYTooltip(@PathParam("expUUID") UUID expUUID,
-            @PathParam("outputId") String outputId,
-            @QueryParam("xValue") long xValue,
-            @QueryParam("yValue") long yValue,
-            @QueryParam("entryId") long entryId) {
-        return Response.status(Status.NOT_IMPLEMENTED).entity("XY tooltip are not implemented yet").build(); //$NON-NLS-1$
     }
 
     /**
