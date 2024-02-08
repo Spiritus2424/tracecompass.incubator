@@ -3,7 +3,7 @@ package org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.cor
 
 import static org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.services.EndpointConstants.NO_SUCH_TRACE;
 
-import java.util.List;
+//import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -77,18 +77,18 @@ public class GraphController {
 
     //     return Response.ok(previousGraphWorker).build();
     // }
-
-    @Path("vertexes")
-    @GET
-    public Response getUnmatchedTmfVertex(@PathParam("expUUID") UUID expUuid, @QueryParam("direction") Direction direction, @QueryParam("start") Long start, @QueryParam("end") Long end) {
-        TmfExperiment tmfExperiment = this.experimentService.getTmfExperiment(expUuid);
-        if (tmfExperiment == null) {
-            return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
-        }
-
-        List<ITmfVertex> vertexes = this.graphService.getUnmatchedTmfVertex(tmfExperiment, body.getParameters(), direction);
-        return Response.ok(vertexes).build();
-    }
+//
+//    @Path("vertexes")
+//    @GET
+//    public Response getUnmatchedTmfVertex(@PathParam("expUUID") UUID expUuid, @QueryParam("direction") Direction direction, @QueryParam("start") Long start, @QueryParam("end") Long end) {
+//        TmfExperiment tmfExperiment = this.experimentService.getTmfExperiment(expUuid);
+//        if (tmfExperiment == null) {
+//            return Response.status(Status.NOT_FOUND).entity(NO_SUCH_TRACE).build();
+//        }
+//
+//        List<ITmfVertex> vertexes = this.graphService.getUnmatchedTmfVertex(tmfExperiment, body.getParameters(), direction);
+//        return Response.ok(vertexes).build();
+//    }
 
     @Path("indexes")
     @GET

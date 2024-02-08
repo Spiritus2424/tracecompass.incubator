@@ -141,7 +141,6 @@ public class WebApplication {
         rc.register(DataProviderService.class);
         rc.register(FilterService.class);
         rc.register(HealthService.class);
-        rc.register(XmlService.class);
         rc.register(CORSFilter.class);
         rc.register(JacksonObjectMapperProvider.class);
         EncodingFilter.enableFor(rc, GZipEncoder.class);
@@ -153,7 +152,6 @@ public class WebApplication {
         rc.register(ExperimentController.class);
         rc.register(TimeGraphController.class);
         rc.register(GraphController.class);
-        rc.register(ActionController.class);
         rc.register(XyController.class);
     }
 
