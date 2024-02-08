@@ -27,16 +27,16 @@ WORKDIR /app/
 
 RUN mvn clean install -DskipTests
 
-FROM alpine:3.16.0
+FROM alpine:3.18.0
 
-ENV JAVA_HOME=/opt/java-minimal
-ENV PATH="$PATH:$JAVA_HOME/bin"
+ENV JAVA_MINIMAL="/opt/java-minimal"
+ENV PATH="$PATH:$JAVA_MINIMAL/bin"
 ENV TRACESERVER_PORT="8080"
 
 # Required dependency for Eclipse Trace Compass Server
 RUN apk --no-cache add libc6-compat
 
-COPY --from=packager "$JAVA_HOME" "$JAVA_HOME"
+COPY --from=packager "$JAVA_MINIMAL" "$JAVA_MINIMAL"
 COPY --from=packager /app/trace-server/org.eclipse.tracecompass.incubator.trace.server.product/target/products/traceserver/linux/gtk/x86_64/trace-compass-server /usr/src/tracecompass
 
 WORKDIR /usr/src/tracecompass
