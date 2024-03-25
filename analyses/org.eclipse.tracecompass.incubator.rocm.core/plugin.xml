@@ -5,7 +5,7 @@
          point="org.eclipse.linuxtools.tmf.core.analysis">
       <module
             analysis_module="org.eclipse.tracecompass.incubator.internal.rocm.core.analysis.old.RocmMetadataAnalysis"
-            automatic="true"
+            automatic="false"
             id="org.eclipse.tracecompass.incubator.rocm.core.analysis.functionname"
             name="ROCm Function Name Analysis">
          <tracetype
@@ -18,7 +18,7 @@
          point="org.eclipse.linuxtools.tmf.core.analysis">
       <module
             analysis_module="org.eclipse.tracecompass.analysis.counters.core.CounterAnalysis"
-            automatic="true"
+            automatic="false"
             id="org.eclipse.tracecompass.analysis.counters.core.counteranalysis"
             name="Counters">
          <tracetype
@@ -41,7 +41,7 @@
          point="org.eclipse.linuxtools.tmf.core.analysis">
       <module
             analysis_module="org.eclipse.tracecompass.incubator.internal.rocm.core.analysis.old.RocmCallStackAnalysis"
-            automatic="true"
+            automatic="false"
             id="org.eclipse.tracecompass.incubator.rocm.core.analysis.interval"
             name="ROCm API Analysis">
          <tracetype

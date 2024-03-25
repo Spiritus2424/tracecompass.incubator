@@ -27,7 +27,7 @@
          point="org.eclipse.linuxtools.tmf.core.analysis">
       <module
             analysis_module="org.eclipse.tracecompass.incubator.internal.opentracing.core.analysis.spanlife.SpanLifeAnalysis"
-            automatic="true"
+            automatic="false"
             icon="icons/spanslife.png"
             id="org.eclipse.tracecompass.incubator.opentracing.analysis.spanlife"
             name="Spans Life">

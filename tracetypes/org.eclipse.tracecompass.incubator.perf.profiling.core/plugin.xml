@@ -15,7 +15,7 @@
       </module>
       <module
             analysis_module="org.eclipse.tracecompass.incubator.internal.perf.profiling.core.symbol.PerfMmapAnalysisModule"
-            automatic="true"
+            automatic="false"
             id="org.eclipse.tracecompass.incubator.perf.profiling.core.symbol.mmap"
             name="%analysis.symbol">
          <tracetype

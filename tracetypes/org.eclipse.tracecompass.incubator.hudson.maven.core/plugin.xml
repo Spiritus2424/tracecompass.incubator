@@ -20,7 +20,7 @@
          point="org.eclipse.linuxtools.tmf.core.analysis">
       <module
             analysis_module="org.eclipse.tracecompass.incubator.internal.hudson.maven.core.analysis.MavenCallstackAnalysis"
-            automatic="true"
+            automatic="false"
             id="org.eclipse.tracecompass.incubator.husdon.maven.core.callstack"
             name="Maven Callstack">
          <tracetype

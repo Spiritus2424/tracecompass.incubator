@@ -25,7 +25,7 @@
       </module>
       <module
             analysis_module="org.eclipse.tracecompass.incubator.internal.otf2.core.analysis.callstack.Otf2CallstackAnalysis"
-            automatic="true"
+            automatic="false"
             icon="icons/stckframe_obj.gif"
             id="org.eclipse.tracecompass.incubator.otf2.core.analysis.callstack"
             name="%otf2.analysis.callstack">

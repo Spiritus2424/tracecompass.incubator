@@ -44,7 +44,7 @@
       </parameterProvider>
       <!--<module
             analysis_module="org.eclipse.tracecompass.analysis.os.linux.core.kernelanalysis.KernelAnalysis"
-            automatic="true"
+            automatic="false"
             id="org.eclipse.tracecompass.analysis.os.linux.kernel"
             name="Kernel Analysis Test">
          <tracetype

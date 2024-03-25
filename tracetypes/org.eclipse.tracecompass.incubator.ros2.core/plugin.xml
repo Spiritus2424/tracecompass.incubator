@@ -22,7 +22,7 @@
       <module
             analysis_module="org.eclipse.tracecompass.incubator.internal.ros2.core.analysis.objects.Ros2ObjectsAnalysis"
             applies_experiment="true"
-            automatic="true"
+            automatic="false"
             icon="icons/ros2.png"
             id="org.eclipse.tracecompass.incubator.ros2.core.analysis.objects"
             name="%analysis.ros2.objects">
@@ -38,7 +38,7 @@
       <module
             analysis_module="org.eclipse.tracecompass.incubator.internal.ros2.core.analysis.messages.Ros2MessagesAnalysis"
             applies_experiment="true"
-            automatic="true"
+            automatic="false"
             icon="icons/ros2.png"
             id="org.eclipse.tracecompass.incubator.ros2.core.analysis.messages"
             name="%analysis.ros2.messages">
