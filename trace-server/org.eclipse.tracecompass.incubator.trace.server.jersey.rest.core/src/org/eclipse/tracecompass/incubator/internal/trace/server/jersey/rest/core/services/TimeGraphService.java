@@ -37,7 +37,7 @@ public class TimeGraphService {
     private final @NonNull Logger logger;
 
     private TimeGraphService() {
-        this.logger = TraceCompassLog.getLogger(TreeService.class);
+        this.logger = TraceCompassLog.getLogger(TimeGraphService.class);
         this.dataProviderManager = DataProviderManager.getInstance();
 
     }

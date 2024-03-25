@@ -30,6 +30,8 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.Map.Entry;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -51,6 +53,9 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.tracecompass.common.core.log.TraceCompassLog;
+import org.eclipse.tracecompass.common.core.log.TraceCompassLogUtils.FlowScopeLog;
+import org.eclipse.tracecompass.common.core.log.TraceCompassLogUtils.FlowScopeLogBuilder;
 import org.eclipse.tracecompass.incubator.internal.trace.server.jersey.rest.core.Activator;
 import org.eclipse.tracecompass.tmf.core.TmfCommonConstants;
 import org.eclipse.tracecompass.tmf.core.event.ITmfEvent;
@@ -71,9 +76,14 @@ public class TraceService {
     private static final String TRACES_FOLDER = "Traces"; //$NON-NLS-1$
     private static TraceService traceService;
 
+    private final @NonNull Logger logger;
+
     private final Map<UUID, IResource> resources;
 
+
+
     private TraceService() {
+        this.logger = TraceCompassLog.getLogger(TraceService.class);
         this.resources = Collections.synchronizedMap(initTraces());
     }
 
@@ -87,23 +97,27 @@ public class TraceService {
     }
 
     public List<Trace> getTraces() {
-        List<Trace> traces = null;
-        synchronized (this.resources) {
-            traces = this.resources.keySet().stream()
-                .map((UUID uuid) -> createTraceModel(uuid))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+        try (FlowScopeLog scope = new FlowScopeLogBuilder(this.logger, Level.FINE, "TraceService#getTraces").build() ) { //$NON-NLS-1$
+            List<Trace> traces = null;
+            synchronized (this.resources) {
+                traces = this.resources.keySet().stream()
+                        .map((UUID uuid) -> createTraceModel(uuid))
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList());
+            }
+            return traces;
         }
-        return traces;
     }
 
 
     public Trace getTrace(@NotNull UUID uuid) throws NotFoundException {
-        Trace trace = createTraceModel(uuid);
-        if (trace == null) {
-            throw new NotFoundException(NO_SUCH_TRACE);
+        try (FlowScopeLog scope = new FlowScopeLogBuilder(this.logger, Level.FINE, "TraceService#getTrace").build() ) { //$NON-NLS-1$
+            Trace trace = createTraceModel(uuid);
+            if (trace == null) {
+                throw new NotFoundException(NO_SUCH_TRACE);
+            }
+            return trace;
         }
-        return trace;
     }
 
 
@@ -116,101 +130,111 @@ public class TraceService {
      * @return List of Trace
      */
     public List<Trace> openTraces(String uri, String name, String typeID, int maxDepth ,Optional<String> regexFilter) {
-      List<String> paths;
+        try (FlowScopeLog scope = new FlowScopeLogBuilder(this.logger, Level.FINE, "TraceService#openTraces").build() ) { //$NON-NLS-1$
+            List<String> paths;
+            try(Stream<java.nio.file.Path> stream = Files.walk(Paths.get(uri), maxDepth)) {
+                paths = stream.parallel()
+                        .filter((Path path) -> Files.isDirectory(path))
+                        .map(path -> path.toString())
+                        .collect(Collectors.toList());
+            } catch (IOException e) {
+                paths = new ArrayList<>();
+            }
 
-      try(Stream<java.nio.file.Path> stream = Files.walk(Paths.get(uri), maxDepth)) {
-          paths = stream.parallel()
-              .filter((Path path) -> Files.isDirectory(path))
-              .map(path -> path.toString())
-              .collect(Collectors.toList());
-      } catch (IOException e) {
-          paths = new ArrayList<>();
-      }
+            if (regexFilter.isPresent()) {
+                paths.removeIf(Pattern.compile(regexFilter.get()).asPredicate().negate());
+            }
 
-      if (regexFilter.isPresent()) {
-          paths.removeIf(Pattern.compile(regexFilter.get()).asPredicate().negate());
-      }
-
-      List<Trace> traces = new ArrayList<>();
-      for(String path : paths) {
-          String traceName = name != null ? String.format("%s%s", name,Paths.get(path).getFileName().toString()) : null; //$NON-NLS-1$
-          try {
-              traces.add(this.openTrace(path, traceName, typeID));
-          } catch (Exception e) { }
-      }
+            List<Trace> traces = new ArrayList<>();
+            for(String path : paths) {
+                String traceName = name != null ? String.format("%s%s", name,Paths.get(path).getFileName().toString()) : null; //$NON-NLS-1$
+                try {
+                    traces.add(this.openTrace(path, traceName, typeID));
+                } catch (Exception e) { }
+            }
 
 
-      return traces;
+            return traces;
+        }
     }
 
 
     public Trace openTrace(String path, String name, String typeID) throws TmfTraceImportException, CoreException, IllegalArgumentException, SecurityException, NotFoundException, InternalServerErrorException, ClientErrorException {
-        if (!Paths.get(path).toFile().exists()) {
-            throw new NotFoundException(String.format("%s at %s", NO_SUCH_TRACE, path)); //$NON-NLS-1$
-        }
-
-        List<TraceTypeHelper> traceTypes = TmfTraceType.selectTraceType(path, typeID);
-        if (traceTypes.isEmpty()) {
-            throw new ClientErrorException(NOT_SUPPORTED, Status.NOT_IMPLEMENTED);
-        }
-        String traceType = traceTypes.get(0).getTraceTypeId();
-        String traceName = name == null ? Paths.get(path).getFileName().toString() : name;
-
-        IResource resource = getResource(path, traceName);
-        if (!resource.exists()) {
-            if (!createResource(path, resource)) {
-                throw new InternalServerErrorException(TRACE_CREATION_FAILED);
+        try (FlowScopeLog scope = new FlowScopeLogBuilder(this.logger, Level.FINE, "TraceService#openTrace").build() ) { //$NON-NLS-1$
+            if (!Paths.get(path).toFile().exists()) {
+                throw new NotFoundException(String.format("%s at %s", NO_SUCH_TRACE, path)); //$NON-NLS-1$
             }
-            resource.setPersistentProperty(TmfCommonConstants.TRACETYPE, traceType);
-        } else if(resource.exists()) {
-            IPath targetLocation = getTargetLocation(path);
-            IPath oldLocation = ResourceUtil.getLocation(resource);
-            if (oldLocation == null || !targetLocation.equals(oldLocation.removeTrailingSeparator()) ||
-                    !traceType.equals(resource.getPersistentProperty(TmfCommonConstants.TRACETYPE))) {
-                synchronized (this.resources) {
-                    Optional<@NonNull Entry<UUID, IResource>> oldEntry = this.resources.entrySet().stream()
-                            .filter(entry -> resource.equals(entry.getValue()))
-                            .findFirst();
-                    if(oldEntry.isPresent()) {
-                        UUID oldUUID = oldEntry.get().getKey();
-                        throw new ClientErrorException(Response.status(Status.CONFLICT).entity(createTraceModel(oldUUID)).build());
+            List<TraceTypeHelper> traceTypes = null;
+
+            try (FlowScopeLog scopeSelectTraceType = new FlowScopeLogBuilder(this.logger, Level.FINE, "TraceService#openTrace:selectTraceType").build() ) { //$NON-NLS-1$
+             traceTypes = TmfTraceType.selectTraceType(path, typeID);
+            }
+
+            if (traceTypes.isEmpty()) {
+                throw new ClientErrorException(NOT_SUPPORTED, Status.NOT_IMPLEMENTED);
+            }
+            String traceType = traceTypes.get(0).getTraceTypeId();
+            String traceName = name == null ? Paths.get(path).getFileName().toString() : name;
+
+            IResource resource = getResource(path, traceName);
+            if (!resource.exists()) {
+                if (!createResource(path, resource)) {
+                    throw new InternalServerErrorException(TRACE_CREATION_FAILED);
+                }
+                resource.setPersistentProperty(TmfCommonConstants.TRACETYPE, traceType);
+            } else if(resource.exists()) {
+                IPath targetLocation = getTargetLocation(path);
+                IPath oldLocation = ResourceUtil.getLocation(resource);
+                if (oldLocation == null || !targetLocation.equals(oldLocation.removeTrailingSeparator()) ||
+                        !traceType.equals(resource.getPersistentProperty(TmfCommonConstants.TRACETYPE))) {
+                    synchronized (this.resources) {
+                        Optional<@NonNull Entry<UUID, IResource>> oldEntry = this.resources.entrySet().stream()
+                                .filter(entry -> resource.equals(entry.getValue()))
+                                .findFirst();
+                        if(oldEntry.isPresent()) {
+                            UUID oldUUID = oldEntry.get().getKey();
+                            throw new ClientErrorException(Response.status(Status.CONFLICT).entity(createTraceModel(oldUUID)).build());
+                        }
+                        throw new InternalServerErrorException("Failed to find conflicting trace"); //$NON-NLS-1$
                     }
-                    throw new InternalServerErrorException("Failed to find conflicting trace"); //$NON-NLS-1$
                 }
             }
+            UUID uuid = getTraceUUID(resource);
+            this.resources.put(uuid, resource);
+            return createTraceModel(uuid);
         }
-        UUID uuid = getTraceUUID(resource);
-        this.resources.put(uuid, resource);
-        return createTraceModel(uuid);
+
     }
 
     public Trace deleteTrace(@NotNull UUID uuid) {
-        Trace trace = createTraceModel(uuid);
-        if (trace == null) {
-            throw new NotFoundException(NO_SUCH_TRACE);
-        }
-        if (ExperimentService.getInstance().isTraceInUse(uuid)) {
-            throw new ClientErrorException(Response.status(Status.CONFLICT).entity(trace).build());
-        }
-        IResource resource = this.resources.remove(uuid);
-        if (resource != null) {
-            try {
-                // Delete supplementary files and folders
-                File supplFolder = new File(resource.getPersistentProperty(TmfCommonConstants.TRACE_SUPPLEMENTARY_FOLDER));
-                FileUtils.cleanDirectory(supplFolder);
-                cleanupFolders(supplFolder,
-                        resource.getProject().getFolder(TmfCommonConstants.TRACE_SUPPLEMENTARY_FOLDER_NAME).getLocation().toFile());
-                // Delete trace resource
-                resource.delete(IResource.FORCE, null);
-                cleanupFolders(resource.getParent().getLocation().toFile(),
-                        resource.getProject().getFolder(TRACES_FOLDER).getLocation().toFile());
-                // Refresh the workspace
-                resource.getProject().refreshLocal(Integer.MAX_VALUE, null);
-            } catch (CoreException | IOException e) {
-                Activator.getInstance().logError("Failed to delete trace", e); //$NON-NLS-1$
+        try (FlowScopeLog scope = new FlowScopeLogBuilder(this.logger, Level.FINE, "TraceService#deleteTrace").build() ) { //$NON-NLS-1$
+            Trace trace = createTraceModel(uuid);
+            if (trace == null) {
+                throw new NotFoundException(NO_SUCH_TRACE);
             }
+            if (ExperimentService.getInstance().isTraceInUse(uuid)) {
+                throw new ClientErrorException(Response.status(Status.CONFLICT).entity(trace).build());
+            }
+            IResource resource = this.resources.remove(uuid);
+            if (resource != null) {
+                try {
+                    // Delete supplementary files and folders
+                    File supplFolder = new File(resource.getPersistentProperty(TmfCommonConstants.TRACE_SUPPLEMENTARY_FOLDER));
+                    FileUtils.cleanDirectory(supplFolder);
+                    cleanupFolders(supplFolder,
+                            resource.getProject().getFolder(TmfCommonConstants.TRACE_SUPPLEMENTARY_FOLDER_NAME).getLocation().toFile());
+                    // Delete trace resource
+                    resource.delete(IResource.FORCE, null);
+                    cleanupFolders(resource.getParent().getLocation().toFile(),
+                            resource.getProject().getFolder(TRACES_FOLDER).getLocation().toFile());
+                    // Refresh the workspace
+                    resource.getProject().refreshLocal(Integer.MAX_VALUE, null);
+                } catch (CoreException | IOException e) {
+                    Activator.getInstance().logError("Failed to delete trace", e); //$NON-NLS-1$
+                }
+            }
+            return trace;
         }
-        return trace;
     }
 
     /**
@@ -221,10 +245,12 @@ public class TraceService {
      * @return the trace UUID
      */
     public UUID getTraceUUID(IResource resource) {
-        IPath location = ResourceUtil.getLocation(resource);
-        IPath path = location != null ? location.append(resource.getName()) : resource.getProjectRelativePath();
-        UUID uuid = UUID.nameUUIDFromBytes(Objects.requireNonNull(path.toString().getBytes(Charset.defaultCharset())));
-        return uuid;
+        try (FlowScopeLog scope = new FlowScopeLogBuilder(this.logger, Level.FINE, "TraceService#getTraceUUID").build() ) { //$NON-NLS-1$
+            IPath location = ResourceUtil.getLocation(resource);
+            IPath path = location != null ? location.append(resource.getName()) : resource.getProjectRelativePath();
+            UUID uuid = UUID.nameUUIDFromBytes(Objects.requireNonNull(path.toString().getBytes(Charset.defaultCharset())));
+            return uuid;
+        }
     }
 
     /**
@@ -246,30 +272,32 @@ public class TraceService {
      * @return the trace instance, or null if it could not be created
      */
     public @Nullable ITmfTrace createTraceInstance(UUID uuid) {
-        try {
-            IResource resource = this.resources.get(uuid);
-            if (resource == null) {
+        try (FlowScopeLog scope = new FlowScopeLogBuilder(this.logger, Level.FINE, "TraceService#createTraceInstance").build() ) { //$NON-NLS-1$
+            try {
+                IResource resource = this.resources.get(uuid);
+                if (resource == null) {
+                    return null;
+                }
+                String typeID = TmfTraceType.getTraceTypeId(resource);
+                if (typeID == null) {
+                    return null;
+                }
+                ITmfTrace trace = TmfTraceType.instantiateTrace(typeID);
+                if (trace != null) {
+                    String path = Objects.requireNonNull(ResourceUtil.getLocation(resource)).removeTrailingSeparator().toOSString();
+                    String name = resource.getName();
+                    trace.initTrace(resource, path, ITmfEvent.class, name, typeID);
+                    trace.indexTrace(false);
+                    // read first event to make sure start time is initialized
+                    ITmfContext ctx = trace.seekEvent(0);
+                    trace.getNext(ctx);
+                    ctx.dispose();
+                }
+                return trace;
+            } catch (CoreException | TmfTraceException e) {
+                Activator.getInstance().logError("Failed to create trace instance for " + uuid, e); //$NON-NLS-1$
                 return null;
             }
-            String typeID = TmfTraceType.getTraceTypeId(resource);
-            if (typeID == null) {
-                return null;
-            }
-            ITmfTrace trace = TmfTraceType.instantiateTrace(typeID);
-            if (trace != null) {
-                String path = Objects.requireNonNull(ResourceUtil.getLocation(resource)).removeTrailingSeparator().toOSString();
-                String name = resource.getName();
-                trace.initTrace(resource, path, ITmfEvent.class, name, typeID);
-                trace.indexTrace(false);
-                // read first event to make sure start time is initialized
-                ITmfContext ctx = trace.seekEvent(0);
-                trace.getNext(ctx);
-                ctx.dispose();
-            }
-            return trace;
-        } catch (CoreException | TmfTraceException e) {
-            Activator.getInstance().logError("Failed to create trace instance for " + uuid, e); //$NON-NLS-1$
-            return null;
         }
     }
 
@@ -321,30 +349,34 @@ public class TraceService {
      *             if an error occurs
      */
     private synchronized boolean createResource(String path, IResource resource) throws CoreException {
-        // create the resource hierarchy.
-        IPath targetLocation = new org.eclipse.core.runtime.Path(path);
-        createFolder((IFolder) resource.getParent(), null);
-        if (!ResourceUtil.createSymbolicLink(resource, targetLocation, true, null)) {
-            return false;
+        try (FlowScopeLog scope = new FlowScopeLogBuilder(this.logger, Level.FINE, "TraceService#createResource").build() ) { //$NON-NLS-1$
+            // create the resource hierarchy.
+            IPath targetLocation = new org.eclipse.core.runtime.Path(path);
+            createFolder((IFolder) resource.getParent(), null);
+            if (!ResourceUtil.createSymbolicLink(resource, targetLocation, true, null)) {
+                return false;
+            }
+
+            // create supplementary folder on file system:
+            IFolder supplRootFolder = resource.getProject().getFolder(TmfCommonConstants.TRACE_SUPPLEMENTARY_FOLDER_NAME);
+            IFolder supplFolder = supplRootFolder.getFolder(resource.getProjectRelativePath().removeFirstSegments(1));
+            createFolder(supplFolder, null);
+            resource.setPersistentProperty(TmfCommonConstants.TRACE_SUPPLEMENTARY_FOLDER, supplFolder.getLocation().toOSString());
+
+            return true;
         }
-
-        // create supplementary folder on file system:
-        IFolder supplRootFolder = resource.getProject().getFolder(TmfCommonConstants.TRACE_SUPPLEMENTARY_FOLDER_NAME);
-        IFolder supplFolder = supplRootFolder.getFolder(resource.getProjectRelativePath().removeFirstSegments(1));
-        createFolder(supplFolder, null);
-        resource.setPersistentProperty(TmfCommonConstants.TRACE_SUPPLEMENTARY_FOLDER, supplFolder.getLocation().toOSString());
-
-        return true;
     }
 
     private void createFolder(IFolder folder, IProgressMonitor monitor) throws CoreException {
-        // Taken from: org.eclipse.tracecompass.tmf.ui.project.model.TraceUtil.java
-        // TODO: have a tmf.core util for that.
-        if (!folder.exists()) {
-            if (folder.getParent() instanceof IFolder) {
-                createFolder((IFolder) folder.getParent(), monitor);
+        try (FlowScopeLog scope = new FlowScopeLogBuilder(this.logger, Level.FINE, "TraceService#createFolder").build() ) { //$NON-NLS-1$
+            // Taken from: org.eclipse.tracecompass.tmf.ui.project.model.TraceUtil.java
+            // TODO: have a tmf.core util for that.
+            if (!folder.exists()) {
+                if (folder.getParent() instanceof IFolder) {
+                    createFolder((IFolder) folder.getParent(), monitor);
+                }
+                folder.create(true, true, monitor);
             }
-            folder.create(true, true, monitor);
         }
     }
 
